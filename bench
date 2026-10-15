@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+BENCHMARK_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec "$BENCHMARK_ROOT/.venv/bin/python" "$BENCHMARK_ROOT/benchmark.py" "$@"

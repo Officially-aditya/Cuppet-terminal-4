@@ -1,0 +1,15 @@
+{
+  "dataset": "terminal-bench/terminal-bench@4.0.0",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "max",
+  "codex_version": "0.162.1",
+  "node_version": "22.21.0",
+  "cuppet_repository": "https://github.com/Officially-aditya/Cuppet-desktop.git",
+  "cuppet_revision": "58270905de9e794f12c6dcf6b26e07a069e462ed",
+  "tst_repository": "https://github.com/Officially-aditya/Cuppet-code.git",
+  "tst_revision": "9f2a8ae63555b7534ee1ccfe211efce1ad46f630",
+  "docker_context": "colima-benchmark",
+  "platform": "linux/amd64",
+  "attempts": 1,
+  "concurrency": 1
+}

@@ -1,0 +1,404 @@
+{
+  "dataset": "terminal-bench/terminal-bench@4.0.0",
+  "profile": "local CPU subset",
+  "max_cpus": 2,
+  "max_memory_mb": 4096,
+  "tasks": [
+    {
+      "name": "atrx-vep-crispr",
+      "task_config_sha256": "55162d0d783ca06c36a6c010e3d9b79a8ee70269f8e0e22f1fdd513927c344e2"
+    },
+    {
+      "name": "batched-eval-parity",
+      "task_config_sha256": "f87bd91a37cc8004af7e38a2af68080d17488e82244c56d6327082c08d10164a"
+    },
+    {
+      "name": "bun-sourcemap-leak",
+      "task_config_sha256": "0fdbbdb8649644c9e567c49a703160c7f4683acd8ef88d2c3acda8eb5cdb97e5"
+    },
+    {
+      "name": "cargo-flight-dispatch",
+      "task_config_sha256": "3975d3c467f09bee4e662086f624dd05887c6eb636266c2e1a0e2b80f7cbd3f1"
+    },
+    {
+      "name": "coq-block-bound",
+      "task_config_sha256": "9a0da0a67e569a9c61b6e50dc832fcf38e9e313a83d99e715a3a1c9575cb3b73"
+    },
+    {
+      "name": "embedding-drift-monitor",
+      "task_config_sha256": "2be93dceb5217e078f01c38d127ce8beee83c6d092940eeef8d4798561c0a4d4"
+    },
+    {
+      "name": "fin-saccr-rwa",
+      "task_config_sha256": "12a1ef2d125435294348d6c52751fe02e340b37ab50f0c6719b052f0e6d4bc94"
+    },
+    {
+      "name": "foodstuff-beta-activity",
+      "task_config_sha256": "a22d5f8e7b94d02c142a697133a2edb7b9dcb46c10273d33309e446ceb127c4a"
+    },
+    {
+      "name": "freecad-impeller",
+      "task_config_sha256": "ca1e2e58ba7fcc283a53ca677a17cf23ed56b5d20f355a7fa8e64f517ab7c1f1"
+    },
+    {
+      "name": "freecad-platform-drawing",
+      "task_config_sha256": "21789c8269f26eae981498484f059811ce1c8e7c066654cab86c8ae81acac790"
+    },
+    {
+      "name": "freecad-spring-clip",
+      "task_config_sha256": "ea275e3f4b3fa3e288509e110fc1136e4d2f193e37ef7a69209616da8ecbbc3b"
+    },
+    {
+      "name": "freight-dispatch-shift",
+      "task_config_sha256": "0754ed59ee84fc6ab1516a46c7fcfb2c92bc75143feeaebf8ffa63c5a2014f94"
+    },
+    {
+      "name": "glycan-ms2-elucidation",
+      "task_config_sha256": "2d679c96def2815b4332ae958e06b5b4dac0536ad34f1b59e0f525d63f38bdf8"
+    },
+    {
+      "name": "heat-pump-warranty",
+      "task_config_sha256": "4375747f17d2e4eb760111bbed305a7e12d2e99473e63855312584d23513e495"
+    },
+    {
+      "name": "kv-live-surgery",
+      "task_config_sha256": "b40e510d4295dc5707562886d9f801d6770d98690aa88b5c458cd887469b84b9"
+    },
+    {
+      "name": "music-harmony",
+      "task_config_sha256": "bcfefc908b5816b4063ada6c30e37f35d466702fbc5d14a1adc8a9e8bc89058c"
+    },
+    {
+      "name": "mvcc-lsm-compaction",
+      "task_config_sha256": "0bbe4d181bd89c10e5ba31688ace9a12270d5f88db0717c1de80ddad7d734e20"
+    },
+    {
+      "name": "nextjs-performance",
+      "task_config_sha256": "8382cf7b9976dc6123d2256503e24831db6ba6813117b1cbcea253fc333e6238"
+    },
+    {
+      "name": "ontology-kg-querying",
+      "task_config_sha256": "e08c91a8a170619e10fa948045b4c82c0a5cc3c993b8d678fcbb2d72471cefee"
+    },
+    {
+      "name": "photonic-waveguide-routing",
+      "task_config_sha256": "35c8c85d3ab522562f50fca9345507da1215c975b414133ec0658d9b1554ac43"
+    },
+    {
+      "name": "production-planning",
+      "task_config_sha256": "c46110e929854d0ac0503704f595cb3e01565af9471adb9037fcb9f527f3f78c"
+    },
+    {
+      "name": "react-lead-form",
+      "task_config_sha256": "d1fe8370126e02e5317c2151cabf8f5749752229dcf9d441f2499367e1e76dcb"
+    },
+    {
+      "name": "retro-console-soc",
+      "task_config_sha256": "df0344070aca19a7ed119c6556d0514b99b556ec659b8d2838a713c1deb11c79"
+    },
+    {
+      "name": "risk-scorer-replay",
+      "task_config_sha256": "52e1c72c2c916278387f015c45ce828ce3f4ac042d4e77cf44bac5bdfdb9f4b9"
+    },
+    {
+      "name": "roy-polymorph-cn",
+      "task_config_sha256": "af46af8a801104459e7e637c5cfe379cb64c177d323504722c5a5209c37fd003"
+    },
+    {
+      "name": "session-window-debug",
+      "task_config_sha256": "196612341158c4a2a8650fc5c48c78449f8381daf2a33d1eca3f2607f5a513bf"
+    },
+    {
+      "name": "sound-change-cascade",
+      "task_config_sha256": "f30bd9e5a283dd9dae2e8894b81fb887693d97d2cfee654a45a26221b2d8c427"
+    },
+    {
+      "name": "vllm-deepseek-streaming",
+      "task_config_sha256": "a2220f38c5fb2355f2384d35bdbdc2375596bbc029240cc63639ed8870e63998"
+    },
+    {
+      "name": "wal-recovery-ordering",
+      "task_config_sha256": "5e32947bc8ea59f7350cc927a3a569397a33e7b61e03eb073263f0f4312023ef"
+    }
+  ],
+  "excluded": [
+    {
+      "name": "biped-contact-dynamics",
+      "task_config_sha256": "7257e145c6466820f2d9facf57e2af386049e4d5793ea544678b8b5dab2ee440",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "cad-model",
+      "task_config_sha256": "fe2d84ec25a2311292b1257ca8df4566accf27c09f77f73e57098c8fce4846e6",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "ctr-optimization",
+      "task_config_sha256": "31e838d5595f458c416e42ca66187c43aff9eb40417f732d5e0d8a72354c1e7a",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "cumulative-layout-shift",
+      "task_config_sha256": "9d37a59a733d2ca59ab3bc61cbbb7d432a2a42744ec97302d856a1dcf63f918d",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "data-anonymization",
+      "task_config_sha256": "30c9d935ce3daa7b234a0528715fc96bb09492fb1039e447f3a6fea0a29cc93c",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "distributed-dedup",
+      "task_config_sha256": "b8114280c7eb8ae6df602133940a5edd9bb9aa8bdd668be0172a32f3c237bcec",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "formal-crypto",
+      "task_config_sha256": "60cd39a48ae410793d5d9d644261577c06da055eee2caa1efcdf2810eed5eda9",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "fp8-rmsnorm-gemm",
+      "task_config_sha256": "27fe702a4ae0cee9d8e848c07cad3ec4561fc937e98af1e4e891b3056bf0f20d",
+      "reasons": [
+        "requires GPU",
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "gsea-proteomics",
+      "task_config_sha256": "a611bfbc67d3fac59f52d43cf7e6178d42409fd97a8688564eacaea5f4d2cde1",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "hof-topology-interpenetration",
+      "task_config_sha256": "0708a0b74bcb3dbeadd6697792aea8d52f7a9f65785bdcd63cac497d411d54b7",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "html-js-filter",
+      "task_config_sha256": "b18d7fe51ebe669134dcf6e85458e2af8b73cb38644cc289ed99862436a75019",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "interleaved-vigenere",
+      "task_config_sha256": "d2b9b4f98304d5458ccde463b9670a9ddd89cd4c01bbd03e93a4b92860bcab8a",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "intrastat-meldung",
+      "task_config_sha256": "33ef57097bc94e3dd4e8e4411121a42a31ca58b32095f809c9adeb308ae1bb9c",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "jax-speedrun-gpu",
+      "task_config_sha256": "aff5b66cfe22208fab634d15b973846d2f708b0665037020756601074ce5c079",
+      "reasons": [
+        "requires GPU",
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "ks-solver-cpp",
+      "task_config_sha256": "a0a2c7cad043f50a38913980907171483d1a854637ab370d14cdc3295a079a6e",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "lake-temp-glm",
+      "task_config_sha256": "2824ccacaa135072cf74eb538b8064d2e25081aec415803d0c45ba089091b053",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "layout-config-recreation",
+      "task_config_sha256": "98056157dc437331202f214600248732821e9e6ce0c797e6904a614a3dc69754",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "layout-config-recreation2",
+      "task_config_sha256": "0e3af2ed24dabb17682b592b052373b0d6dc8d8276b95a361d74531d79900c40",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "legacy-utility-triage",
+      "task_config_sha256": "001affbe4954c94ce9bda2496654b059040f0ddc1628fd386616cc239415e581",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "live-database-cutover",
+      "task_config_sha256": "771fb5d6703e63a80d9d468f21d8f090be9df95c2262461ecfe0ac318618a540",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "math-eval-grader",
+      "task_config_sha256": "587f33819fdf1ad0383daf3ab5c9c658f2783c6fde8c2526a573c078aef406c0",
+      "reasons": [
+        "requires GPU",
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "medical-claims-processing",
+      "task_config_sha256": "aa36199d3d48db8582f30e8a0ccc015cbcd2f5b3cf34958256f73b8abdfc4d40",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "mp-checkpoint-consolidation",
+      "task_config_sha256": "fe16527bbb85da9195c7951a209eeed5ff8f473e68c557386f9c4ac6c52cfde1",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "payments-pipeline-fix",
+      "task_config_sha256": "03d07e77c49dec6bb6abf9b27acd5092c4d33475d286f5c6d5b402c713b31d14",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "pretrain-shard-corruption",
+      "task_config_sha256": "4539f00ded49dfaf6d33c38bbec34ebe23c6f16a77f33ec80c176bacf972d6b0",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "protein-autointerp-disulfide",
+      "task_config_sha256": "14c41fbcb0d91d7d1a6329b2462585dd02e11554aafb18693f6477829c268d14",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "rs-archive-clone",
+      "task_config_sha256": "710a8058d5588c0043e03896dc92fde7c84a83a1031643a7410cd7335ec9c01e",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "satb-audio-transcription",
+      "task_config_sha256": "10a79e366429737edd57d77653a544e52aad4119d78b056d503f2aa76b57d377",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "sglang-qwen-burst",
+      "task_config_sha256": "1e5f0209f1a4733f9da401b4c57208d945d8b09a34c467637f21ec7416d96f91",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "shadow-relay",
+      "task_config_sha256": "6d05224a97042b280e4e7498ab54080306aebb6c8594b5db6a4401a8be892b91",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "takens-embedding-lean",
+      "task_config_sha256": "10b855331b2a38047891127cb0d458190c3714a0b092c3e9ce0e4c516fe35cb5",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "telecom-entity-resolution",
+      "task_config_sha256": "b21ffb422d93cd145751c5039ca4a02423b2e0cd5757b265711c48f3b4980d1b",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "uefi-bootkit",
+      "task_config_sha256": "1329fcc137c58f230f9a16526918e60dfdc55afd6b481a692e654f5711ab43cf",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "vba-userform-port",
+      "task_config_sha256": "7b0867739152765ed59f14bb57c747a465ec842692fd1d9b70b9b712c6f22f3a",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "vf2-speedup-networkx",
+      "task_config_sha256": "c13ae3ece11474fa4f9944b23d94dd4406974f509b20ceed94614572c377beff",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "vpp-loss-divergence",
+      "task_config_sha256": "41f4887bfb9384e1ddc222bc32b87a6b71a7f93034e60a870380843f53aae850",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "wdm-design",
+      "task_config_sha256": "1f1ec25aeb7d93807851e48de39a72c6475140c6186c7165495d3e261acb4e04",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    }
+  ]
+}
