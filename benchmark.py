@@ -163,7 +163,8 @@ def configuration(agent, preflight=False):
     auth_path = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
     if not auth_path.is_file():
         raise RuntimeError("Run codex login using ChatGPT; a file-based auth.json is required.")
-    common = {"model_name": SETTINGS["model"], "env": {"CODEX_AUTH_JSON_PATH": str(auth_path)}}
+    common = {"model_name": SETTINGS["model"], "override_setup_timeout_sec": SETTINGS["agent_setup_timeout_sec"],
+              "env": {"CODEX_AUTH_JSON_PATH": str(auth_path)}}
     if agent == "codex":
         agent_config = {**common, "name": "codex", "kwargs": {
             "version": SETTINGS["codex_version"], "reasoning_effort": SETTINGS["reasoning_effort"],

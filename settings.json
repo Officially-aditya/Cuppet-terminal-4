@@ -3,6 +3,7 @@
   "model": "gpt-6-luna",
   "reasoning_effort": "max",
   "codex_version": "0.162.1",
+  "agent_setup_timeout_sec": 1800,
   "node_version": "22.21.0",
   "cuppet_repository": "https://github.com/Officially-aditya/Cuppet-desktop.git",
   "cuppet_revision": "58270905de9e794f12c6dcf6b26e07a069e462ed",

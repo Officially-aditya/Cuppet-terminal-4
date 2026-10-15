@@ -19,6 +19,7 @@ the explicit `run` command starts Terminal-Bench tasks.
 | Dataset | `terminal-bench/terminal-bench@4.0.0` |
 | Platform | Linux x86-64 in local Docker |
 | Attempts / concurrency | 1 / 1 |
+| Agent installation time budget | 30 minutes |
 | Task timeouts and resources | Original task definitions |
 | Built-in web search | Disabled |
 
@@ -138,6 +139,12 @@ Finished tasks' downloaded benchmark images are released after grading to keep
 the 25 GB Docker disk available; task logs and results are retained. When both
 suites finish, the coordinator writes `reports/comparison.json` and `RESULTS.md`,
 with infrastructure errors listed separately from graded failures.
+
+After a graceful interruption, `scripts/run-sequence.py --resume` continues from
+the saved checkpoint. It retains completed results, retries setup timeouts and
+interrupted trials in a new continuation job, and keeps the original attempts
+as superseded audit records. Job paths are recorded per harness in the progress
+file. Increasing the installation budget does not change task-solving timeouts.
 
 To stop the VM and reclaim its RAM when finished:
 
