@@ -130,6 +130,15 @@ Task results and verifier rewards are written to separate directories under
 reasoning level, task manifest and VM configuration. Do not mix preflight
 rewards into benchmark results.
 
+The sequential coordinator in `scripts/run-sequence.py` runs all 29 Codex tasks
+before starting the same 29 Cuppet tasks. Live progress is written atomically to
+`reports/sequence.json`. The current background launch also writes to
+`reports/sequence-launch.log` and uses `caffeinate` to prevent idle sleep.
+Finished tasks' downloaded benchmark images are released after grading to keep
+the 25 GB Docker disk available; task logs and results are retained. When both
+suites finish, the coordinator writes `reports/comparison.json` and `RESULTS.md`,
+with infrastructure errors listed separately from graded failures.
+
 To stop the VM and reclaim its RAM when finished:
 
 ```sh
