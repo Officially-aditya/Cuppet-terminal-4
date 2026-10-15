@@ -42,6 +42,10 @@ Apple Silicon. Start the VM after a reboot with:
 colima start --profile benchmark
 ```
 
+The task service is pinned to x86-64 in `configs/platform.yaml`. Docker's global
+default platform is cleared so Harbor's verifier helpers can use the VM's native
+architecture.
+
 For a fresh installation, install Homebrew and sign in with `codex login` first.
 Rosetta must be installed on Apple Silicon. Then:
 

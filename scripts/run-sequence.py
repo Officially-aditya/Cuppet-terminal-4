@@ -95,7 +95,7 @@ async def run(resume=False):
     assert plans["codex"]["tasks"] == plans["cuppet"]["tasks"]
     paths = {Path(task["path"]).name: Path(task["path"]) for task in plans["codex"]["tasks"]}
     env = benchmark.docker_environment()
-    for name in ("OPENAI_API_KEY", "CODEX_API_KEY", "OPENAI_BASE_URL"):
+    for name in ("OPENAI_API_KEY", "CODEX_API_KEY", "OPENAI_BASE_URL", "DOCKER_DEFAULT_PLATFORM"):
         os.environ.pop(name, None)
     os.environ.update(env)
     STATUS.parent.mkdir(parents=True, exist_ok=True)

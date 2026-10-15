@@ -33,7 +33,7 @@ def save(path, value):
 
 def docker_environment():
     env = dict(os.environ)
-    for key in ("OPENAI_API_KEY", "CODEX_API_KEY", "OPENAI_BASE_URL"):
+    for key in ("OPENAI_API_KEY", "CODEX_API_KEY", "OPENAI_BASE_URL", "DOCKER_DEFAULT_PLATFORM"):
         env.pop(key, None)
     if sys.platform == "darwin":
         endpoint = execute(
@@ -49,7 +49,6 @@ def docker_environment():
     ) if p.exists()]
     save(config_dir / "config.json", {"cliPluginsExtraDirs": plugin_dirs})
     env["DOCKER_CONFIG"] = str(config_dir)
-    env["DOCKER_DEFAULT_PLATFORM"] = SETTINGS["platform"]
     env["PYTHONPATH"] = str(ROOT)
     return env
 
