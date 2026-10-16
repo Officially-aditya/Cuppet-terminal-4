@@ -53,6 +53,10 @@ class CuppetDesktopAgent(BaseAgent):
         auth_path = Path(self._get_env("CODEX_AUTH_JSON_PATH") or "~/.codex/auth.json").expanduser()
         if not auth_path.is_file():
             raise ValueError("Sign in with ChatGPT using codex login before running preflight.")
+        identity = await environment.exec(command="id -u")
+        owner = (identity.stdout or "").strip()
+        if identity.return_code or not owner.isdecimal():
+            raise RuntimeError("Could not determine the container's agent UID.")
         home = "/tmp/cuppet-codex-home"
         logs = self.environment_logs_dir.as_posix()
         quote = shlex.quote
@@ -65,7 +69,6 @@ class CuppetDesktopAgent(BaseAgent):
             config_path = Path(temporary) / "config.toml"
             config_path.write_text('web_search = "disabled"\n')
             await environment.upload_file(config_path, f"{home}/config.toml")
-        owner = str(environment.default_user or "root")
         await environment.exec(
             command=f"chmod 700 {home} && chmod 600 {home}/auth.json && chown -R {quote(owner)} {home}",
             user="root",

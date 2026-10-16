@@ -165,7 +165,7 @@ def configuration(agent, preflight=False):
     common = {"model_name": SETTINGS["model"], "override_setup_timeout_sec": SETTINGS["agent_setup_timeout_sec"],
               "env": {"CODEX_AUTH_JSON_PATH": str(auth_path)}}
     if agent == "codex":
-        agent_config = {**common, "name": "codex", "kwargs": {
+        agent_config = {**common, "import_path": "codex_agent:SubscriptionCodex", "kwargs": {
             "version": SETTINGS["codex_version"], "reasoning_effort": SETTINGS["reasoning_effort"],
             "web_search": "disabled",
         }}

@@ -6,3 +6,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 RUN printf 'cuppet codex preflight\n' > /app/input.txt
 COPY check.sh /app/check.sh
+RUN chown -R nobody:nogroup /app
+ENV HOME=/tmp
+USER nobody

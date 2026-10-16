@@ -1,6 +1,6 @@
 # Preflight verification
 
-Verified on 2026-10-15 22:28 IST. **No Terminal-Bench tasks have been run.**
+Initially verified on 2026-10-15 22:28 IST, before any Terminal-Bench tasks ran.
 
 | Check | Result |
 | --- | --- |
@@ -49,3 +49,19 @@ grading.
 The Electron frontend and Windows packaging are outside this runtime preflight.
 The full GPU/resource-heavy suite requires suitable infrastructure. The local
 subset must be reported as a subset when actual benchmarking is started.
+
+## Non-root authentication regression, 2026-10-16
+
+The fixture now runs as `nobody`, matching the unprivileged user that exposed a
+credential-copy permission problem. A disposable login-status probe reproduced
+the failure with the original private file ownership and succeeded after changing
+ownership to the container user, using the same ChatGPT credentials.
+
+Both real Luna/max preflights passed with the ownership fix:
+
+- Codex: `jobs/preflight-codex-20261016T072152Z`, reward 1/1.
+- Cuppet: `jobs/preflight-cuppet-20261016T072634Z`, reward 1/1, managed-native TST
+  connected, file read/edit and shell execution verified.
+
+Local evidence: `reports/auth-permission-probe.json` and `reports/preflight.json`.
+These fixture checks are separate from the ongoing 29-task benchmark sequence.

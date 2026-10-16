@@ -70,6 +70,11 @@ temporary directory inside each disposable container, kept outside exported
 agent logs, and removed before verification. Credentials, caches and generated
 logs are excluded from Git.
 
+Credential copies keep private permissions and are owned by the actual container
+user. The small Codex adapter resolves that user before calling Harbor's standard
+Codex run method; Cuppet applies the same ownership rule. The preflight runs as
+`nobody` to check subscription authentication without root access.
+
 ## Run the preflight
 
 ```sh
@@ -145,8 +150,8 @@ suites finish, the coordinator writes `reports/comparison.json` and `RESULTS.md`
 with infrastructure errors listed separately from graded failures.
 
 After a graceful interruption, `scripts/run-sequence.py --resume` continues from
-the saved checkpoint. It retains completed results, retries setup timeouts and
-interrupted trials in a new continuation job, and keeps the original attempts
+the saved checkpoint. It retains completed results, retries setup timeouts,
+authentication failures and interrupted trials in a new continuation job, and keeps the original attempts
 as superseded audit records. Job paths are recorded per harness in the progress
 file. Increasing the installation budget does not change task-solving timeouts.
 

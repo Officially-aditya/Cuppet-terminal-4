@@ -71,7 +71,7 @@ def resume_checkpoint(previous):
         superseded = current.setdefault("superseded_trials", [])
         for trial in current["trials"]:
             trial.setdefault("job", prior_job)
-            if trial["error"] in {"AgentSetupTimeoutError", "CancelledError"}:
+            if trial["error"] in {"AgentSetupTimeoutError", "AgentAuthenticationError", "CancelledError"}:
                 superseded.append(trial)
             else:
                 kept.append(trial)
@@ -174,7 +174,7 @@ async def run(resume=False):
         for agent, result in state["agents"].items():
             lines.append(f"| {agent} | {result['passed']} | {result['failed']} | {result['errors']} | 29 |")
         lines += ["", "Infrastructure errors are listed separately from graded failures.",
-                  "Setup timeouts and the trial interrupted for setup repair are retained as superseded records when retried; completed graded results are preserved.",
+                  "Setup timeouts, authentication failures and interrupted trials are retained as superseded records when retried; completed graded results are preserved.",
                   "This is a CPU subset score, not a full Terminal-Bench leaderboard score.", "",
                   "Detailed local evidence: `reports/comparison.json` and the two job directories recorded there."]
         (ROOT / "RESULTS.md").write_text("\n".join(lines) + "\n")
@@ -187,5 +187,5 @@ async def run(resume=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--resume", action="store_true", help="Continue a paused sequence, retaining completed results and retrying setup timeouts/interrupted work.")
+    parser.add_argument("--resume", action="store_true", help="Continue a paused sequence, retaining completed results and retrying setup timeouts, authentication failures and interrupted work.")
     asyncio.run(run(resume=parser.parse_args().resume))
