@@ -169,12 +169,13 @@ async def run(resume=False):
         persist(state)
         benchmark.save(ROOT / "reports" / "comparison.json", state)
         lines = ["# Terminal-Bench 4: local 29-task comparison", "",
-                 "GPT-6 Luna/max, Codex subscription, one attempt per task. Codex ran first, then Cuppet.", "",
+                 "GPT-6 Luna/max, Codex subscription, one retained result per task. Codex ran first, then Cuppet.", "",
                  "| Harness | Passed | Failed | Errors | Total |", "| --- | ---: | ---: | ---: | ---: |"]
         for agent, result in state["agents"].items():
             lines.append(f"| {agent} | {result['passed']} | {result['failed']} | {result['errors']} | 29 |")
         lines += ["", "Infrastructure errors are listed separately from graded failures.",
                   "Setup timeouts, authentication failures and interrupted trials are retained as superseded records when retried; completed graded results are preserved.",
+                  "User-requested retries after model execution are recorded in `manual_retries`; these retained results are not first-attempt scores.",
                   "This is a CPU subset score, not a full Terminal-Bench leaderboard score.", "",
                   "Detailed local evidence: `reports/comparison.json` and the two job directories recorded there."]
         (ROOT / "RESULTS.md").write_text("\n".join(lines) + "\n")
