@@ -46,6 +46,8 @@ fig.subplots_adjust(left=0.255, right=0.97, top=0.90, bottom=0.13, wspace=0.12)
 (ROOT / "assets").mkdir(exist_ok=True)
 (ROOT / ".cache").mkdir(exist_ok=True)
 fig.savefig(ROOT / "assets/task-ratios.svg", metadata={"Date": None})
+svg_path = ROOT / "assets/task-ratios.svg"
+svg_path.write_text("\n".join(line.rstrip() for line in svg_path.read_text().splitlines()) + "\n")
 fig.savefig(ROOT / ".cache/report-task-ratios.png", dpi=135)
 plt.close(fig)
 print(ROOT / "assets/task-ratios.svg")
