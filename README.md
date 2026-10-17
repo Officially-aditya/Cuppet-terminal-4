@@ -4,6 +4,30 @@ This prepares a paired comparison of **GPT-6 Luna with max reasoning** in Cuppet
 Desktop and the standard Codex harness, using an existing **ChatGPT/Codex
 subscription**. API keys and Modal are not required.
 
+The run is complete: **Codex 3 passes / 24 graded failures / 2 infrastructure
+errors; Cuppet 4 passes / 25 graded failures / 0 infrastructure errors**.
+See the [full report](REPORT.md) for every task, token and timing comparisons,
+tool activity, retry accounting, and limitations. These are retained final
+results after documented recovery, not clean first-attempt scores.
+
+The dedicated benchmark VM, Docker context, build/dataset caches, `.venv`, and
+unpacked job logs have been removed. Shared command-line tools and the existing
+Codex login remain available. Raw evidence is preserved locally in the verified,
+Git-ignored archive `reports/benchmark-evidence-20261017.tar.gz`; final measurements
+remain in `reports/final-metrics.json`. The temporary benchmark monitor was removed.
+
+To inspect the raw evidence and regenerate the report without model calls:
+
+```sh
+tar -xzf reports/benchmark-evidence-20261017.tar.gz jobs reports/host-cuppet reports/host-cuppet-retry
+python3 scripts/report-results.py
+```
+
+The report generator uses Python's standard library. The optional chart script
+`scripts/plot-results.py` uses Matplotlib 3.11.2; its generated SVG is checked in.
+Run `./scripts/setup-mac.sh` to recreate the benchmark runtime before another
+preflight or evaluation.
+
 `prepare` builds/downloads prerequisites. `preflight` runs only the small fixture
 in this repository. `plan` writes configurations without executing tasks. Only
 the explicit `run` command starts Terminal-Bench tasks.
@@ -18,7 +42,7 @@ the explicit `run` command starts Terminal-Bench tasks.
 | Codex version | `0.162.1` |
 | Dataset | `terminal-bench/terminal-bench@4.0.0` |
 | Platform | Linux x86-64 in local Docker |
-| Attempts / concurrency | 1 / 1 |
+| Per-job attempts / concurrency | 1 / 1; manual retries are documented |
 | Agent installation time budget | 30 minutes |
 | Task timeouts and resources | Original task definitions |
 | Built-in web search | Disabled |
@@ -33,10 +57,10 @@ baseline's agent loop.
 
 ## Set up on this Mac
 
-The required tools have been installed into Homebrew. Harbor uses this folder's
-isolated `.venv`. Docker runs in the dedicated `benchmark` Colima profile with
+The required tools have been installed into Homebrew. Setup creates this folder's
+isolated Harbor `.venv`. Reproduction uses the dedicated `benchmark` Colima profile with
 2 CPUs, 4 GB RAM and a 25 GB data disk. Rosetta supplies x86-64 compatibility on
-Apple Silicon. Start the VM after a reboot with:
+Apple Silicon. After recreating setup, start the VM after a reboot with:
 
 ```sh
 colima start --profile benchmark

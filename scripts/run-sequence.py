@@ -177,7 +177,7 @@ async def run(resume=False):
                   "Setup timeouts, authentication failures and interrupted trials are retained as superseded records when retried; completed graded results are preserved.",
                   "User-requested retries after model execution are recorded in `manual_retries`; these retained results are not first-attempt scores.",
                   "This is a CPU subset score, not a full Terminal-Bench leaderboard score.", "",
-                  "Detailed local evidence: `reports/comparison.json` and the two job directories recorded there."]
+                  "Detailed local evidence: `reports/comparison.json` and the job histories recorded there."]
         (ROOT / "RESULTS.md").write_text("\n".join(lines) + "\n")
         print(f"{now()} Both 29-task suites finished. See RESULTS.md.", flush=True)
     except BaseException as error:
