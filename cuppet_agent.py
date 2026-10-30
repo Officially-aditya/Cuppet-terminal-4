@@ -20,6 +20,7 @@ class CuppetOptions(AgentOptions):
     timeout_sec: int = Field(default=0, ge=0)
     source_revision: str = "58270905de9e794f12c6dcf6b26e07a069e462ed"
     dynamic_enrichment: bool = False
+    pre_run_enrichment: bool = False
     enrichment_interval_ms: int = Field(default=60000, gt=0)
 
 
@@ -87,6 +88,7 @@ class CuppetDesktopAgent(BaseAgent):
                 ),
                 env={"CODEX_HOME": home,
                      "CUPPET_DYNAMIC_ENRICHMENT": "1" if self.options.dynamic_enrichment else "0",
+                     "CUPPET_PRERUN_ENRICHMENT": "1" if self.options.pre_run_enrichment else "0",
                      "CUPPET_DYNAMIC_ENRICHMENT_INTERVAL_MS": str(self.options.enrichment_interval_ms)},
                 timeout_sec=self.options.timeout_sec + 60 if self.options.timeout_sec else None,
             )
@@ -100,7 +102,11 @@ class CuppetDesktopAgent(BaseAgent):
             if summary["status"] != "complete":
                 raise RuntimeError(f"Cuppet task status: {summary['status']}")
             usage = (summary.get("sample") or {}).get("usage") or {}
-            background_usage = (summary.get("dynamicEnrichment") or {}).get("usage") or {}
+            background_usage = {}
+            for phase in (summary.get("dynamicEnrichment"), summary.get("preRunEnrichment")):
+                for key, value in (phase or {}).get("usage", {}).items():
+                    if isinstance(value, (int, float)):
+                        background_usage[key] = background_usage.get(key, 0) + value
             def total(key):
                 values = [source[key] for source in (usage, background_usage) if isinstance(source.get(key), (int, float))]
                 return sum(values) if values else None
@@ -116,6 +122,7 @@ class CuppetDesktopAgent(BaseAgent):
                 "project_root": summary["projectRoot"],
                 "execution": (summary.get("sample") or {}).get("execution"),
                 "dynamic_enrichment": summary.get("dynamicEnrichment"),
+                "pre_run_enrichment": summary.get("preRunEnrichment"),
                 "foreground_usage": usage,
                 "background_usage": background_usage,
             }

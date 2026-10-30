@@ -19,7 +19,7 @@ CACHE = ROOT / ".cache"
 SETTINGS = json.loads(Path(os.environ.get("CUPPET_BENCHMARK_SETTINGS", ROOT / "settings.json")).read_text())
 MANIFEST = ROOT / "configs" / SETTINGS.get("task_manifest", "local-cpu-tasks.json")
 DATASET = CACHE / "datasets" / "terminal-bench"
-BUNDLE = CACHE / "cuppet-runtime.tar.gz"
+BUNDLE = CACHE / SETTINGS.get("runtime_bundle", "cuppet-runtime.tar.gz")
 HARBOR = Path(sys.executable).parent / ("harbor.exe" if os.name == "nt" else "harbor")
 
 
@@ -123,7 +123,7 @@ def prepare(cuppet_source):
     with tarfile.open(BUNDLE, "w:gz") as archive_file:
         for entry in sorted(snapshot.iterdir()):
             archive_file.add(entry, arcname=entry.name)
-    save(CACHE / "bundle.json", {**identity, "bundle_sha256": hashlib.sha256(BUNDLE.read_bytes()).hexdigest()})
+    save(CACHE / SETTINGS.get("bundle_identity", "bundle.json"), {**identity, "bundle_sha256": hashlib.sha256(BUNDLE.read_bytes()).hexdigest()})
 
     if len(list(DATASET.glob("*/task.toml"))) != 66:
         execute([HARBOR, "datasets", "download", SETTINGS["dataset"], "--output-dir", CACHE / "datasets"])
@@ -181,6 +181,7 @@ def configuration(agent, preflight=False):
             "reasoning_effort": SETTINGS["reasoning_effort"], "timeout_sec": 300 if preflight else 0,
             "source_revision": SETTINGS["cuppet_revision"],
             "dynamic_enrichment": SETTINGS.get("dynamic_enrichment", False),
+            "pre_run_enrichment": SETTINGS.get("pre_run_enrichment", False),
             "enrichment_interval_ms": SETTINGS.get("enrichment_initial_interval_ms", 60000),
         }}
     if preflight:

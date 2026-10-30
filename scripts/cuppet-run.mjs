@@ -30,6 +30,8 @@ const instruction = await readFile(instructionPath, 'utf8');
 const events = createWriteStream(join(output, 'cuppet-events.jsonl'), { mode: 0o600 });
 const stderr = createWriteStream(join(output, 'cuppet-stderr.log'), { mode: 0o600 });
 const dynamicEnabled = process.env.CUPPET_DYNAMIC_ENRICHMENT === '1';
+const preRunEnabled = process.env.CUPPET_PRERUN_ENRICHMENT === '1';
+if (dynamicEnabled && preRunEnabled) throw new Error('Select one enrichment mode');
 const dynamicEvents = [];
 
 const { listCodexModels } = await import(pathToFileURL(join(source, 'src/runtime/providers/backends/codex.mjs')));
@@ -90,10 +92,10 @@ child.on('exit', (code, signal) => {
   pending.clear();
   if (!settled) fail(error);
 });
-function request(method, params = {}) {
+function request(method, params = {}, timeoutMs = 45_000) {
   const id = randomUUID();
   return new Promise((resolveRequest, reject) => {
-    const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Cuppet request timed out: ${method}`)); }, 45_000);
+    const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Cuppet request timed out: ${method}`)); }, timeoutMs);
     pending.set(id, { resolve: resolveRequest, reject, timer });
     child.stdin.write(`${JSON.stringify({ id, method, params })}\n`);
   });
@@ -104,6 +106,8 @@ const deadline = Number(timeout) > 0
   ? setTimeout(() => fail(new Error(`Cuppet preflight/task timed out after ${timeout}s`)), Number(timeout) * 1000)
   : null;
 let result;
+let preRun = null;
+let primaryStartedAt = null;
 try {
   await request('health');
   await request(dynamicEnabled ? 'background.resume' : 'background.pause');
@@ -120,6 +124,14 @@ try {
     secondary: { providerID: 'codex', modelID: model, variant: effort },
     secondaryEffort: effort,
   };
+  if (preRunEnabled) {
+    preRun = await request('background.prepare-repository', { sessionId, prompt: instruction, provider }, 300_000);
+    await writeFile(join(output, 'pre-run-enrichment.json'), `${JSON.stringify(preRun, null, 2)}\n`, { mode: 0o600 });
+    if (preRun.status !== 'completed' || !preRun.admittedKeys?.some((key) => preRun.retrievedKeys?.includes(key))) {
+      throw new Error('The pre-run pass did not store and retrieve any repository memories; the primary was not started.');
+    }
+  }
+  primaryStartedAt = Date.now();
   const accepted = await request('session.send', { sessionId, text: instruction, provider });
   if (accepted.sessionId !== sessionId) throw new Error('Cuppet unexpectedly routed the task to another session.');
   const message = await finished;
@@ -158,7 +170,30 @@ try {
       }, {}),
     };
     result.source = JSON.parse(await readFile(join(source, 'benchmark-source.json'), 'utf8'));
+    if (preRunEnabled) {
+      const inputs = (await readFile(join(dataDir, 'benchmark-provider-inputs.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse);
+      const textOf = (record) => (record.message.params.input ?? []).filter((item) => item.type === 'text').map((item) => item.text).join('\n');
+      const primaryInputs = inputs.filter((record) => textOf(record).includes('<CUPPET_TOOL_POLICY'));
+      const primaryInput = primaryInputs[0];
+      const context = primaryInput ? (textOf(primaryInput).match(/<CUPPET_CONTEXT\b[\s\S]*?<\/CUPPET_CONTEXT>/g) ?? []).join('\n') : '';
+      const matchedKeys = preRun.admittedKeys.filter((key) => context.includes(`- ${key}:`));
+      const verified = inputs.length === 2 && primaryInputs.length === 1 && matchedKeys.length > 0 && primaryInput.at >= preRun.finishedAt;
+      result.preRunEnrichment = {
+        ...preRun,
+        durationMs: preRun.finishedAt - preRun.startedAt,
+        primaryStartedAt,
+        initialContextVerified: verified,
+        initialContext: context,
+        matchedKeys,
+        outboundModelRequests: inputs.length,
+        primaryModelRequests: primaryInputs.length,
+        inputAuditFile: 'cuppet-data/benchmark-provider-inputs.jsonl',
+      };
+    }
     await writeFile(join(output, 'cuppet-result.json'), `${JSON.stringify(result, null, 2)}\n`, { mode: 0o600 });
+    if (preRunEnabled && (!result.preRunEnrichment?.initialContextVerified || dynamicEvents.length)) {
+      throw new Error('The initial context audit did not verify exactly one preparation pass and no timed enrichment.');
+    }
   }
   events.end();
   stderr.end();

@@ -234,3 +234,30 @@ agent token totals. If an enrichment call is cancelled at task completion and
 does not return usage, `usageComplete` is false and recorded usage is a lower
 bound. Updated prompt/runtime and manual infrastructure differences mean this
 run cannot isolate enrichment's contribution against the October 17 result.
+
+## MVCC with enrichment before execution
+
+`settings-mvcc-prerun.json` selects only `mvcc-lsm-compaction`. Both model roles
+use GPT-6 Luna/max. One background pass reads a bounded snapshot of the supplied
+project source and documentation, writes admitted observations to TST, then the
+primary starts with the complete original task prompt and retrieved initial
+context. Background enrichment stays paused throughout primary execution;
+the 1/2/4/8-minute scheduler is disabled.
+
+Preparation time and tokens are included in the agent's totals and also recorded
+separately. Actual `turn/start` inputs are saved in the private trial evidence,
+and the runner verifies that admitted memory keys appear in the primary's first
+`CUPPET_CONTEXT` block. Account/authentication requests are excluded from this
+input audit. The source snapshot lists file hashes and any omissions.
+
+```sh
+export CUPPET_BENCHMARK_SETTINGS="$PWD/settings-mvcc-prerun.json"
+export SSL_CERT_FILE="$(.venv/bin/python -m certifi)"
+./bench prepare --cuppet-source /path/to/Cuppet-desktop
+.venv/bin/python scripts/run-prerun-mvcc.py --preflight
+.venv/bin/python scripts/run-prerun-mvcc.py
+```
+
+The cached bundle and task manifest are separate from the previous experiment.
+Progress is saved to `reports/mvcc-prerun-latest.json`; completed results go to
+`MVCC-PRERUN-RESULTS.md`. The disposable preflight is excluded from the score.

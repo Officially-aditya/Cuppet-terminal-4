@@ -1,0 +1,292 @@
+{
+  "dataset": "terminal-bench/terminal-bench@4.0.0",
+  "profile": "local CPU subset",
+  "max_cpus": 2,
+  "max_memory_mb": 4096,
+  "tasks": [
+    {
+      "name": "mvcc-lsm-compaction",
+      "task_config_sha256": "0bbe4d181bd89c10e5ba31688ace9a12270d5f88db0717c1de80ddad7d734e20"
+    }
+  ],
+  "excluded": [
+    {
+      "name": "biped-contact-dynamics",
+      "task_config_sha256": "7257e145c6466820f2d9facf57e2af386049e4d5793ea544678b8b5dab2ee440",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "cad-model",
+      "task_config_sha256": "fe2d84ec25a2311292b1257ca8df4566accf27c09f77f73e57098c8fce4846e6",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "ctr-optimization",
+      "task_config_sha256": "31e838d5595f458c416e42ca66187c43aff9eb40417f732d5e0d8a72354c1e7a",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "cumulative-layout-shift",
+      "task_config_sha256": "9d37a59a733d2ca59ab3bc61cbbb7d432a2a42744ec97302d856a1dcf63f918d",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "data-anonymization",
+      "task_config_sha256": "30c9d935ce3daa7b234a0528715fc96bb09492fb1039e447f3a6fea0a29cc93c",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "distributed-dedup",
+      "task_config_sha256": "b8114280c7eb8ae6df602133940a5edd9bb9aa8bdd668be0172a32f3c237bcec",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "formal-crypto",
+      "task_config_sha256": "60cd39a48ae410793d5d9d644261577c06da055eee2caa1efcdf2810eed5eda9",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "fp8-rmsnorm-gemm",
+      "task_config_sha256": "27fe702a4ae0cee9d8e848c07cad3ec4561fc937e98af1e4e891b3056bf0f20d",
+      "reasons": [
+        "requires GPU",
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "gsea-proteomics",
+      "task_config_sha256": "a611bfbc67d3fac59f52d43cf7e6178d42409fd97a8688564eacaea5f4d2cde1",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "hof-topology-interpenetration",
+      "task_config_sha256": "0708a0b74bcb3dbeadd6697792aea8d52f7a9f65785bdcd63cac497d411d54b7",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "html-js-filter",
+      "task_config_sha256": "b18d7fe51ebe669134dcf6e85458e2af8b73cb38644cc289ed99862436a75019",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "interleaved-vigenere",
+      "task_config_sha256": "d2b9b4f98304d5458ccde463b9670a9ddd89cd4c01bbd03e93a4b92860bcab8a",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "intrastat-meldung",
+      "task_config_sha256": "33ef57097bc94e3dd4e8e4411121a42a31ca58b32095f809c9adeb308ae1bb9c",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "jax-speedrun-gpu",
+      "task_config_sha256": "aff5b66cfe22208fab634d15b973846d2f708b0665037020756601074ce5c079",
+      "reasons": [
+        "requires GPU",
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "ks-solver-cpp",
+      "task_config_sha256": "a0a2c7cad043f50a38913980907171483d1a854637ab370d14cdc3295a079a6e",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "lake-temp-glm",
+      "task_config_sha256": "2824ccacaa135072cf74eb538b8064d2e25081aec415803d0c45ba089091b053",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "layout-config-recreation",
+      "task_config_sha256": "98056157dc437331202f214600248732821e9e6ce0c797e6904a614a3dc69754",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "layout-config-recreation2",
+      "task_config_sha256": "0e3af2ed24dabb17682b592b052373b0d6dc8d8276b95a361d74531d79900c40",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "legacy-utility-triage",
+      "task_config_sha256": "001affbe4954c94ce9bda2496654b059040f0ddc1628fd386616cc239415e581",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "live-database-cutover",
+      "task_config_sha256": "771fb5d6703e63a80d9d468f21d8f090be9df95c2262461ecfe0ac318618a540",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "math-eval-grader",
+      "task_config_sha256": "587f33819fdf1ad0383daf3ab5c9c658f2783c6fde8c2526a573c078aef406c0",
+      "reasons": [
+        "requires GPU",
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "medical-claims-processing",
+      "task_config_sha256": "aa36199d3d48db8582f30e8a0ccc015cbcd2f5b3cf34958256f73b8abdfc4d40",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "mp-checkpoint-consolidation",
+      "task_config_sha256": "fe16527bbb85da9195c7951a209eeed5ff8f473e68c557386f9c4ac6c52cfde1",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "payments-pipeline-fix",
+      "task_config_sha256": "03d07e77c49dec6bb6abf9b27acd5092c4d33475d286f5c6d5b402c713b31d14",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "pretrain-shard-corruption",
+      "task_config_sha256": "4539f00ded49dfaf6d33c38bbec34ebe23c6f16a77f33ec80c176bacf972d6b0",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "protein-autointerp-disulfide",
+      "task_config_sha256": "14c41fbcb0d91d7d1a6329b2462585dd02e11554aafb18693f6477829c268d14",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "rs-archive-clone",
+      "task_config_sha256": "710a8058d5588c0043e03896dc92fde7c84a83a1031643a7410cd7335ec9c01e",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "satb-audio-transcription",
+      "task_config_sha256": "10a79e366429737edd57d77653a544e52aad4119d78b056d503f2aa76b57d377",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "sglang-qwen-burst",
+      "task_config_sha256": "1e5f0209f1a4733f9da401b4c57208d945d8b09a34c467637f21ec7416d96f91",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "shadow-relay",
+      "task_config_sha256": "6d05224a97042b280e4e7498ab54080306aebb6c8594b5db6a4401a8be892b91",
+      "reasons": [
+        "requires more than 2 CPUs"
+      ]
+    },
+    {
+      "name": "takens-embedding-lean",
+      "task_config_sha256": "10b855331b2a38047891127cb0d458190c3714a0b092c3e9ce0e4c516fe35cb5",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "telecom-entity-resolution",
+      "task_config_sha256": "b21ffb422d93cd145751c5039ca4a02423b2e0cd5757b265711c48f3b4980d1b",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "uefi-bootkit",
+      "task_config_sha256": "1329fcc137c58f230f9a16526918e60dfdc55afd6b481a692e654f5711ab43cf",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "vba-userform-port",
+      "task_config_sha256": "7b0867739152765ed59f14bb57c747a465ec842692fd1d9b70b9b712c6f22f3a",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "vf2-speedup-networkx",
+      "task_config_sha256": "c13ae3ece11474fa4f9944b23d94dd4406974f509b20ceed94614572c377beff",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "vpp-loss-divergence",
+      "task_config_sha256": "41f4887bfb9384e1ddc222bc32b87a6b71a7f93034e60a870380843f53aae850",
+      "reasons": [
+        "requires more than 4096 MB RAM"
+      ]
+    },
+    {
+      "name": "wdm-design",
+      "task_config_sha256": "1f1ec25aeb7d93807851e48de39a72c6475140c6186c7165495d3e261acb4e04",
+      "reasons": [
+        "requires more than 2 CPUs",
+        "requires more than 4096 MB RAM"
+      ]
+    }
+  ]
+}

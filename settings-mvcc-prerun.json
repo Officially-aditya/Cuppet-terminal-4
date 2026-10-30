@@ -1,0 +1,26 @@
+{
+  "dataset": "terminal-bench/terminal-bench@4.0.0",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "max",
+  "codex_version": "0.162.1",
+  "agent_setup_timeout_sec": 1800,
+  "node_version": "22.21.0",
+  "cuppet_repository": "https://github.com/Officially-aditya/Cuppet-desktop.git",
+  "cuppet_revision": "6eef8ff679ed6f7b8686a6b010fbef5996f5ff29",
+  "tst_repository": "https://github.com/Officially-aditya/Cuppet-code.git",
+  "tst_revision": "9f2a8ae63555b7534ee1ccfe211efce1ad46f630",
+  "docker_context": "colima-benchmark",
+  "platform": "linux/amd64",
+  "attempts": 1,
+  "concurrency": 1,
+  "system_prompt_revision": "66370c626c74d92756da4421784082253fe75ff4",
+  "dynamic_enrichment": false,
+  "task_manifest": "mvcc-prerun-tasks.json",
+  "tasks": [
+    "mvcc-lsm-compaction"
+  ],
+  "system_prompt_sha256": "98dacd6d866483b5cff463586bc6c24374c13fdf7c8115b5df04e31afc2d72b8",
+  "pre_run_enrichment": true,
+  "runtime_bundle": "cuppet-runtime-prerun.tar.gz",
+  "bundle_identity": "bundle-prerun.json"
+}
