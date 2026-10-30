@@ -15,6 +15,7 @@ import benchmark
 def run(preflight=False):
     config = benchmark.configuration('cuppet', preflight=preflight)
     settings = benchmark.SETTINGS
+    label = settings.get('run_label', 'mvcc-prerun')
     kwargs = config['agents'][0]['kwargs']
     assert kwargs['pre_run_enrichment'] and not kwargs['dynamic_enrichment']
     assert config['agents'][0]['model_name'] == 'gpt-6-luna' and kwargs['reasoning_effort'] == 'max'
@@ -23,11 +24,11 @@ def run(preflight=False):
     else:
         assert [Path(task['path']).name for task in config['tasks']] == ['mvcc-lsm-compaction']
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-    name = f"{'preflight' if preflight else 'terminal-bench-4'}-cuppet-mvcc-prerun-{stamp}"
+    name = f"{'preflight' if preflight else 'terminal-bench-4'}-cuppet-{label}-{stamp}"
     config['job_name'] = name
     config['quiet'] = True
     folder = ROOT / 'reports' / name
-    latest = ROOT / 'reports' / ('mvcc-prerun-preflight.json' if preflight else 'mvcc-prerun-latest.json')
+    latest = ROOT / 'reports' / f"{label}-{'preflight' if preflight else 'latest'}.json"
     state = {'pid': os.getpid(), 'name': name, 'state': 'running', 'preflight': preflight,
              'started_at': datetime.now(timezone.utc).isoformat(), 'job': f'jobs/{name}',
              'settings': settings, 'config': f'reports/{name}/config.json', 'log': f'reports/{name}.log'}
@@ -51,6 +52,8 @@ def run(preflight=False):
         preparation = summary.get('preRunEnrichment') or {}
         if not preparation.get('initialContextVerified') or summary.get('dynamicEnrichment', {}).get('events'):
             raise RuntimeError('Initial input did not prove one preparation pass with no timed enrichment')
+        if settings.get('developer_instructions_sha256') and not preparation.get('developerInstructionsVerified'):
+            raise RuntimeError('The captured developer instructions did not match the requested prompt')
         if summary['source']['cuppet_revision'] != settings['cuppet_revision'] or summary['source']['system_prompt_sha256'] != settings['system_prompt_sha256']:
             raise RuntimeError('The source or updated system prompt did not match the pinned configuration')
         reward = (result.get('verifier_result') or {}).get('rewards', {}).get('reward')
@@ -67,7 +70,7 @@ def run(preflight=False):
             raise RuntimeError('The isolated pre-run enrichment fixture did not pass')
         persist()
         if not preflight:
-            lines = ['# MVCC: one enrichment pass before execution', '',
+            lines = [settings.get('report_title', '# MVCC: one enrichment pass before execution'), '',
                      f"GPT-6 Luna/max, source `{settings['cuppet_revision']}`; the updated system prompt is preserved.", '',
                      f"- Final reward: {reward}; infrastructure error: {error or 'none'}.",
                      f'- Total agent execution, including preparation: {seconds:.2f} seconds.',
@@ -77,9 +80,10 @@ def run(preflight=False):
                      f"- Admitted memories: {preparation['candidates']}; keys present in the initial request: {len(preparation['matchedKeys'])}.",
                      '- Exactly one preparation phase; no periodic enrichment.',
                      '- Initial model input was captured and verified before interpreting the grade.', '',
+                     f"- Requested developer instructions verified: {preparation.get('developerInstructionsVerified')}.", '',
                      f"Evidence: `{state['job']}` and `reports/{name}/status.json`.", '',
                      'This is a separate fresh attempt. Previous dynamic-enrichment results remain unchanged.']
-            (ROOT / 'MVCC-PRERUN-RESULTS.md').write_text('\n'.join(lines) + '\n')
+            (ROOT / settings.get('result_report', 'MVCC-PRERUN-RESULTS.md')).write_text('\n'.join(lines) + '\n')
         print(json.dumps({'name': name, 'reward': reward, 'error': error, 'agent_execution_seconds': seconds,
                           'preparation_seconds': preparation['durationMs'] / 1000,
                           'initial_memory_keys': preparation['matchedKeys'], 'timed_enrichment': False}), flush=True)

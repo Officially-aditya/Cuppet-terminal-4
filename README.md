@@ -261,3 +261,28 @@ export SSL_CERT_FILE="$(.venv/bin/python -m certifi)"
 The cached bundle and task manifest are separate from the previous experiment.
 Progress is saved to `reports/mvcc-prerun-latest.json`; completed results go to
 `MVCC-PRERUN-RESULTS.md`. The disposable preflight is excluded from the score.
+
+## MVCC with completion-focused developer instructions
+
+`settings-mvcc-completion.json` repeats the one-pass preparation experiment with
+this replacement in the native Codex developer instructions:
+
+> Do not stop with an incomplete task or a partial fix. Address all stated
+> requirements and validate relevant edge cases before declaring completion;
+> passing the first available check is not sufficient.
+
+The previous dynamic-tool-output sentence is removed from that developer block.
+Luna/max, the full original MVCC task, one preparation pass, disabled periodic
+enrichment, and the original solve budget are retained. The private input audit
+also captures `thread/start` so the exact developer instructions can be verified
+against the configured checksum. Previous experiment bundles and summaries are
+preserved separately.
+
+```sh
+export CUPPET_BENCHMARK_SETTINGS="$PWD/settings-mvcc-completion.json"
+./bench prepare --cuppet-source /path/to/Cuppet-desktop
+.venv/bin/python scripts/run-prerun-mvcc.py
+```
+
+Progress: `reports/mvcc-completion-latest.json`.
+Final summary: `MVCC-COMPLETION-RESULTS.md`.

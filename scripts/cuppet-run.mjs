@@ -1,6 +1,6 @@
 // Drive the same JSON protocol and runtime entry point used by the Electron app.
 import { spawn, execFileSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { readFile, mkdir, writeFile, access, cp } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -171,7 +171,11 @@ try {
     };
     result.source = JSON.parse(await readFile(join(source, 'benchmark-source.json'), 'utf8'));
     if (preRunEnabled) {
-      const inputs = (await readFile(join(dataDir, 'benchmark-provider-inputs.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse);
+      const requests = (await readFile(join(dataDir, 'benchmark-provider-inputs.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse);
+      const inputs = requests.filter((record) => record.message.method === 'turn/start');
+      const primaryThread = requests.find((record) => record.message.method === 'thread/start' && record.message.params.dynamicTools?.length);
+      const developerInstructions = primaryThread?.message.params.developerInstructions ?? '';
+      const developerHash = createHash('sha256').update(developerInstructions).digest('hex');
       const textOf = (record) => (record.message.params.input ?? []).filter((item) => item.type === 'text').map((item) => item.text).join('\n');
       const primaryInputs = inputs.filter((record) => textOf(record).includes('<CUPPET_TOOL_POLICY'));
       const primaryInput = primaryInputs[0];
@@ -187,11 +191,14 @@ try {
         matchedKeys,
         outboundModelRequests: inputs.length,
         primaryModelRequests: primaryInputs.length,
+        primaryDeveloperInstructions: developerInstructions,
+        developerInstructionsSha256: developerHash,
+        developerInstructionsVerified: result.source.developer_instructions_sha256 ? developerHash === result.source.developer_instructions_sha256 : null,
         inputAuditFile: 'cuppet-data/benchmark-provider-inputs.jsonl',
       };
     }
     await writeFile(join(output, 'cuppet-result.json'), `${JSON.stringify(result, null, 2)}\n`, { mode: 0o600 });
-    if (preRunEnabled && (!result.preRunEnrichment?.initialContextVerified || dynamicEvents.length)) {
+    if (preRunEnabled && (!result.preRunEnrichment?.initialContextVerified || dynamicEvents.length || result.preRunEnrichment?.developerInstructionsVerified === false)) {
       throw new Error('The initial context audit did not verify exactly one preparation pass and no timed enrichment.');
     }
   }

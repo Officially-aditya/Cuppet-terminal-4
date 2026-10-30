@@ -118,6 +118,7 @@ def prepare(cuppet_source):
         "json5_version": "2.2.3",
         "system_prompt_revision": SETTINGS.get("system_prompt_revision"),
         "system_prompt_sha256": SETTINGS.get("system_prompt_sha256"),
+        "developer_instructions_sha256": SETTINGS.get("developer_instructions_sha256"),
     }
     save(snapshot / "benchmark-source.json", identity)
     with tarfile.open(BUNDLE, "w:gz") as archive_file:
