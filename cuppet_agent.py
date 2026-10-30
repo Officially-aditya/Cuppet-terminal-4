@@ -18,6 +18,9 @@ class CuppetOptions(AgentOptions):
     codex_version: str = "0.162.1"
     reasoning_effort: str = "max"
     timeout_sec: int = Field(default=0, ge=0)
+    source_revision: str = "58270905de9e794f12c6dcf6b26e07a069e462ed"
+    dynamic_enrichment: bool = False
+    enrichment_interval_ms: int = Field(default=60000, gt=0)
 
 
 class CuppetDesktopAgent(BaseAgent):
@@ -29,7 +32,7 @@ class CuppetDesktopAgent(BaseAgent):
         return "cuppet-desktop"
 
     def version(self) -> str:
-        return "58270905de9e794f12c6dcf6b26e07a069e462ed"
+        return self.options.source_revision
 
     async def setup(self, environment):
         # Reuse Harbor's supported, version-pinned Codex installation. Cuppet
@@ -82,7 +85,9 @@ class CuppetDesktopAgent(BaseAgent):
                     f'{quote(logs)} "$PWD" {quote(self.model_name)} '
                     f"{quote(self.options.reasoning_effort)} {self.options.timeout_sec} full"
                 ),
-                env={"CODEX_HOME": home},
+                env={"CODEX_HOME": home,
+                     "CUPPET_DYNAMIC_ENRICHMENT": "1" if self.options.dynamic_enrichment else "0",
+                     "CUPPET_DYNAMIC_ENRICHMENT_INTERVAL_MS": str(self.options.enrichment_interval_ms)},
                 timeout_sec=self.options.timeout_sec + 60 if self.options.timeout_sec else None,
             )
             (self.logs_dir / "cuppet-launch.log").write_text((result.stdout or "") + (result.stderr or ""))
@@ -95,9 +100,13 @@ class CuppetDesktopAgent(BaseAgent):
             if summary["status"] != "complete":
                 raise RuntimeError(f"Cuppet task status: {summary['status']}")
             usage = (summary.get("sample") or {}).get("usage") or {}
-            context.n_input_tokens = usage.get("inputTokens")
-            context.n_output_tokens = usage.get("outputTokens")
-            context.n_cache_tokens = usage.get("cachedInputTokens")
+            background_usage = (summary.get("dynamicEnrichment") or {}).get("usage") or {}
+            def total(key):
+                values = [source[key] for source in (usage, background_usage) if isinstance(source.get(key), (int, float))]
+                return sum(values) if values else None
+            context.n_input_tokens = total("inputTokens")
+            context.n_output_tokens = total("outputTokens")
+            context.n_cache_tokens = total("cachedInputTokens")
             context.metadata = {
                 "cuppet_revision": self.version(),
                 "model": self.model_name,
@@ -106,6 +115,9 @@ class CuppetDesktopAgent(BaseAgent):
                 "tst_connected": summary["tst"]["connected"],
                 "project_root": summary["projectRoot"],
                 "execution": (summary.get("sample") or {}).get("execution"),
+                "dynamic_enrichment": summary.get("dynamicEnrichment"),
+                "foreground_usage": usage,
+                "background_usage": background_usage,
             }
         finally:
             # Keep subscription credentials outside exported logs and remove

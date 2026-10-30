@@ -192,3 +192,45 @@ colima stop --profile benchmark
 - [Harbor's Codex integration](https://github.com/harbor-framework/harbor/blob/main/src/harbor/agents/installed/codex.py)
 - [Terminal-Bench 4.0 release](https://github.com/harbor-framework/terminal-bench/releases/tag/v4.0.0)
 - [Cuppet's native TST artifact contract](https://github.com/Officially-aditya/Cuppet-code/blob/9f2a8ae63555b7534ee1ccfe211efce1ad46f630/docs/tst-runtime-artifacts.md)
+
+## Five-task dynamic enrichment experiment
+
+`settings-dynamic-five.json` selects `session-window-debug`,
+`mvcc-lsm-compaction`, `cargo-flight-dispatch`, `embedding-drift-monitor`, and
+`bun-sourcemap-leak`. The Cuppet source pin includes the updated system prompt
+and live enrichment support; the original October 17 configuration and results
+remain separate.
+
+Both primary execution and background enrichment use GPT-6 Luna/max through the
+existing Codex subscription. Each task gets fresh agent state and native TST.
+The complete original task instruction is delivered once. Enrichment first
+runs one minute after the primary's first tool call. Following each completed
+enrichment attempt, the next delay doubles: two minutes, four minutes, eight
+minutes, and so on. Calls never overlap, and task completion stops the schedule.
+The primary keeps running; newly retrieved TST context is supplied with its next
+tool result. This is timed enrichment, without prompt splitting or additional
+task hints. Original task solve deadlines cover enrichment as well.
+
+Recreate the local runtime using `scripts/setup-mac.sh` if needed. Prepare this
+configuration with:
+
+```sh
+export CUPPET_BENCHMARK_SETTINGS="$PWD/settings-dynamic-five.json"
+export SSL_CERT_FILE="$(.venv/bin/python -m certifi)"
+./bench prepare --cuppet-source /path/to/Cuppet-desktop
+.venv/bin/python scripts/run-dynamic-five.py --preflight
+.venv/bin/python scripts/run-dynamic-five.py
+```
+
+The separate disposable preflight uses an accelerated one-second initial
+interval and checks actual memory admission, retrieval, and foreground delivery.
+The scored five-task run always uses the configured 60-second initial interval.
+Progress is written to `reports/dynamic-five.json`, with timestamped run
+configurations and evidence under `reports/` and `jobs/`. The final summary is
+`DYNAMIC-FIVE-RESULTS.md`.
+
+Foreground and background usage are reported separately and summed in Harbor's
+agent token totals. If an enrichment call is cancelled at task completion and
+does not return usage, `usageComplete` is false and recorded usage is a lower
+bound. Updated prompt/runtime and manual infrastructure differences mean this
+run cannot isolate enrichment's contribution against the October 17 result.

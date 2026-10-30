@@ -29,6 +29,8 @@ await mkdir(dataDir, { recursive: true, mode: 0o700 });
 const instruction = await readFile(instructionPath, 'utf8');
 const events = createWriteStream(join(output, 'cuppet-events.jsonl'), { mode: 0o600 });
 const stderr = createWriteStream(join(output, 'cuppet-stderr.log'), { mode: 0o600 });
+const dynamicEnabled = process.env.CUPPET_DYNAMIC_ENRICHMENT === '1';
+const dynamicEvents = [];
 
 const { listCodexModels } = await import(pathToFileURL(join(source, 'src/runtime/providers/backends/codex.mjs')));
 const catalog = await listCodexModels();
@@ -45,6 +47,7 @@ const child = spawn(process.execPath, [join(source, 'src/runtime/main.mjs')], {
     CUPPET_NONINTERACTIVE: '1',
     CUPPET_PROVIDER_BENCHMARK: '1',
     CUPPET_EXECUTION_BENCHMARK_POLICY: 'optimized',
+    CUPPET_ORCHESTRATOR: '0',
   },
   stdio: ['pipe', 'pipe', 'pipe'],
 });
@@ -72,6 +75,7 @@ lines.on('line', (line) => {
   } else if (value.kind === 'event') {
     events.write(`${JSON.stringify(value.event)}\n`);
     const event = value.event;
+    if (event.type?.startsWith('background.dynamic.')) dynamicEvents.push(event);
     if (event.type === 'runtime.benchmark.sample' && event.sessionId === sessionId) sample = event.sample;
     if (event.type === 'message.completed' && event.message?.sessionId === sessionId && !settled) {
       settled = true;
@@ -102,7 +106,7 @@ const deadline = Number(timeout) > 0
 let result;
 try {
   await request('health');
-  await request('background.pause');
+  await request(dynamicEnabled ? 'background.resume' : 'background.pause');
   const project = await request('project.add-local', { path: resolve(projectPath), name: 'Terminal-Bench' });
   await request('tst.graph.locate', { projectId: project.id, pattern: '*', limit: 1 });
   if (!(await request('tst.status')).connected) throw new Error('Native TST did not connect; no model task was started.');
@@ -113,6 +117,8 @@ try {
   const provider = {
     providerID: 'codex', model, primaryEffort: effort,
     primary: { providerID: 'codex', modelID: model, variant: effort },
+    secondary: { providerID: 'codex', modelID: model, variant: effort },
+    secondaryEffort: effort,
   };
   const accepted = await request('session.send', { sessionId, text: instruction, provider });
   if (accepted.sessionId !== sessionId) throw new Error('Cuppet unexpectedly routed the task to another session.');
@@ -139,6 +145,21 @@ try {
   if (child.exitCode === null && child.signalCode === null) await new Promise((res) => child.once('exit', res));
   clearTimeout(killTimer);
   if (permission === 'full') await cp(dataDir, join(output, 'cuppet-data'), { recursive: true });
+  if (result) {
+    const runs = dynamicEvents.filter((event) => event.type === 'background.dynamic.completed');
+    result.dynamicEnrichment = {
+      enabled: dynamicEnabled,
+      initialIntervalMs: Number(process.env.CUPPET_DYNAMIC_ENRICHMENT_INTERVAL_MS || 60000),
+      events: dynamicEvents,
+      usageComplete: runs.length === dynamicEvents.filter((event) => event.type === 'background.dynamic.running').length && runs.every((run) => run.status === 'completed'),
+      usage: runs.reduce((sum, run) => {
+        for (const [key, value] of Object.entries(run.usage ?? {})) if (typeof value === 'number') sum[key] = (sum[key] ?? 0) + value;
+        return sum;
+      }, {}),
+    };
+    result.source = JSON.parse(await readFile(join(source, 'benchmark-source.json'), 'utf8'));
+    await writeFile(join(output, 'cuppet-result.json'), `${JSON.stringify(result, null, 2)}\n`, { mode: 0o600 });
+  }
   events.end();
   stderr.end();
 }

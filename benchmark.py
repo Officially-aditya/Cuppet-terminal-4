@@ -16,7 +16,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 CACHE = ROOT / ".cache"
-SETTINGS = json.loads((ROOT / "settings.json").read_text())
+SETTINGS = json.loads(Path(os.environ.get("CUPPET_BENCHMARK_SETTINGS", ROOT / "settings.json")).read_text())
+MANIFEST = ROOT / "configs" / SETTINGS.get("task_manifest", "local-cpu-tasks.json")
 DATASET = CACHE / "datasets" / "terminal-bench"
 BUNDLE = CACHE / "cuppet-runtime.tar.gz"
 HARBOR = Path(sys.executable).parent / ("harbor.exe" if os.name == "nt" else "harbor")
@@ -115,6 +116,8 @@ def prepare(cuppet_source):
         "tst_sha256": hashlib.sha256(native.read_bytes()).hexdigest(),
         "codex_version": SETTINGS["codex_version"],
         "json5_version": "2.2.3",
+        "system_prompt_revision": SETTINGS.get("system_prompt_revision"),
+        "system_prompt_sha256": SETTINGS.get("system_prompt_sha256"),
     }
     save(snapshot / "benchmark-source.json", identity)
     with tarfile.open(BUNDLE, "w:gz") as archive_file:
@@ -150,7 +153,10 @@ def create_task_manifest():
             excluded.append({**record, "reasons": reasons})
         else:
             included.append(record)
-    save(ROOT / "configs" / "local-cpu-tasks.json", {
+    if SETTINGS.get("tasks"):
+        available = {task["name"]: task for task in included}
+        included = [available[name] for name in SETTINGS["tasks"]]
+    save(MANIFEST, {
         "dataset": SETTINGS["dataset"], "profile": "local CPU subset",
         "max_cpus": 2, "max_memory_mb": 4096, "tasks": included, "excluded": excluded,
     })
@@ -173,11 +179,14 @@ def configuration(agent, preflight=False):
         agent_config = {**common, "import_path": "cuppet_agent:CuppetDesktopAgent", "kwargs": {
             "bundle_path": str(BUNDLE), "codex_version": SETTINGS["codex_version"],
             "reasoning_effort": SETTINGS["reasoning_effort"], "timeout_sec": 300 if preflight else 0,
+            "source_revision": SETTINGS["cuppet_revision"],
+            "dynamic_enrichment": SETTINGS.get("dynamic_enrichment", False),
+            "enrichment_interval_ms": SETTINGS.get("enrichment_initial_interval_ms", 60000),
         }}
     if preflight:
         task_paths = [ROOT / "preflight"]
     else:
-        manifest = json.loads((ROOT / "configs" / "local-cpu-tasks.json").read_text())
+        manifest = json.loads(MANIFEST.read_text())
         task_paths = []
         for task in manifest["tasks"]:
             path = DATASET / task["name"]
