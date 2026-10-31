@@ -71,7 +71,8 @@ def run():
                  source_revision_at_historical_run_was_not_recorded=True,
                  job=f'jobs/{job_name}', state_dir=str(state_dir),
                  adapter_revision=subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip(),
-                 no_added_agent_or_wall_cap=True, original_task_config=str(config['tasks'][0]['path']))
+                 no_added_agent_or_wall_cap=True, host_process_cwd=str(HISTORICAL.parents[2]),
+                 original_task_config=str(config['tasks'][0]['path']))
     latest = ROOT / 'reports/mvcc-winning-adapter-latest.json'
 
     def persist():
@@ -98,7 +99,7 @@ def run():
     try:
         command = ['uvx', '--from', 'harbor==0.25.0', '--python', '3.14', 'harbor', 'run', '--config', str(config_path)]
         with (folder / 'harbor.log').open('w') as output:
-            subprocess.run(command, cwd=ROOT, env=env, stdout=output, stderr=subprocess.STDOUT, check=True)
+            subprocess.run(command, cwd=HISTORICAL.parents[2], env=env, stdout=output, stderr=subprocess.STDOUT, check=True)
         paths = list((ROOT / 'jobs' / job_name).glob('*/result.json'))
         assert len(paths) == 1
         trial_path = paths[0].parent
