@@ -1,0 +1,7 @@
+# MVCC after a Docker VM reset
+
+At the user's request, delete and recreate only the benchmark Colima VM and its Docker data, preserving host reports and other Colima profiles. Record the Docker engine ID before and after and verify that it changes. The instance is already empty before reset; recreation additionally resets the VM, Docker daemon and networking. Preserve the current VM allocation of 8 CPUs, 5 GiB RAM and 40 GiB disk. The task's own 2-CPU/4-GiB resource limits remain unchanged.
+
+Run one fresh MVCC Original-arm attempt with the same archived adapter and model as the previous retry: GPT-6 Luna/max, Harbor 0.25.0, host Node v22.21.0, Cuppet source 63a4febd561630d67f126caa9ea2b2154fa87d6b, short headless policy, five tools, inherited host Codex profile, TST unconfigured and background enrichment disabled. Rebuild the task and verifier images on the fresh Docker instance. Preserve the original uncapped configuration and existing input-capture checks. Do not pass previous code, grading feedback or benchmark-specific hints to the model.
+
+Use the label mvcc-docker-reset and separate report files so earlier attempts remain intact. Embed the reset evidence in the final structured result. Keep the outcome regardless of reward, and verify all 14 broken starting files and actual primary messages against the archived run before interpreting the grade.

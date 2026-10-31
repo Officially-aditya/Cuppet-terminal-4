@@ -1,8 +1,10 @@
 """Replay the saved passing adapter's Original arm once, from broken code."""
 from datetime import datetime, timezone
+import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import shutil
@@ -33,7 +35,13 @@ def save(path, value):
     path.write_text(json.dumps(value, indent=2) + '\n')
 
 
-def run():
+def run(label='mvcc-winning-adapter', reset_evidence=None):
+    assert re.fullmatch(r'[a-z0-9-]+', label), 'Use a simple experiment label'
+    reset = json.loads(Path(reset_evidence).read_text()) if reset_evidence else None
+    if reset:
+        assert reset['state'] == 'complete' and reset['new_docker_identity_verified']
+        actual = subprocess.run(['docker', '--context', 'colima-benchmark', 'info', '--format', '{{.ID}}'], capture_output=True, text=True, check=True).stdout.strip()
+        assert actual == reset['docker_after']['ID'], 'Docker changed after the recorded reset'
     assert subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=SOURCE, capture_output=True, text=True, check=True).stdout.strip() == PIN
     assert subprocess.run([NODE, '--version'], capture_output=True, text=True, check=True).stdout.strip() == 'v22.21.0'
     assert '0.162.1' in subprocess.run(['codex', '--version'], capture_output=True, text=True, check=True).stdout
@@ -41,7 +49,8 @@ def run():
         assert digest((ROOT / 'winning_adapter' / name).read_bytes()) == expected
         assert (ROOT / 'winning_adapter' / name).read_bytes() == (HISTORICAL / name).read_bytes()
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-    name = f'mvcc-winning-adapter-{stamp}'
+    name = f'{label}-{stamp}'
+    result_prefix = label.upper()
     folder = ROOT / 'reports' / name
     folder.mkdir(parents=True)
     state_dir = folder / 'state'
@@ -73,7 +82,9 @@ def run():
                  adapter_revision=subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip(),
                  no_added_agent_or_wall_cap=True, host_process_cwd=str(HISTORICAL.parents[2]),
                  original_task_config=str(config['tasks'][0]['path']))
-    latest = ROOT / 'reports/mvcc-winning-adapter-latest.json'
+    state['experiment_label'] = label
+    state['docker_reset'] = reset
+    latest = ROOT / 'reports' / f'{label}-latest.json'
 
     def persist():
         state['updated_at'] = now()
@@ -140,8 +151,8 @@ def run():
                      primary_request_count=len(turns), initial_workspace=initial,
                      final_message=agent.get('final_message'), task_checksum=raw.get('task_checksum'))
         persist()
-        save(ROOT / 'MVCC-WINNING-ADAPTER-RESULTS.json', state)
-        lines = ['# MVCC winning-adapter retry', '',
+        save(ROOT / f'{result_prefix}-RESULTS.json', state)
+        lines = ['# MVCC after Docker VM reset' if reset else '# MVCC winning-adapter retry', '',
                  f"Reward: **{reward}**; official tests: **{ctrf['summary']['passed']}/{ctrf['summary']['tests']}**; infrastructure error: **{error or 'none'}**.",
                  f"Agent time: {seconds:.2f}s; controller execution: {state['primary_seconds']:.2f}s. Natural completion: {agent['natural_completion']}.", '',
                  'One fresh Original-arm repair with the archived Python and JavaScript adapter files unchanged. No reviews, handoffs, previous implementation or grading feedback were given to the model.',
@@ -150,8 +161,11 @@ def run():
                  'The passing historical run did not capture its native developer instructions, source revision or profile hashes. Those cannot be proven identical retrospectively; this run records the current source revision and profile hashes. Paths, session IDs and timestamps are necessarily fresh.', '',
                  f"Cuppet source: `{PIN}`. Original adapter hashes: `{EXPECTED}`.",
                  f"Raw evidence: `reports/{name}/status.json`, `reports/{name}/state/`, and `{state['job']}`.",
-                 'Structured result: [MVCC-WINNING-ADAPTER-RESULTS.json](MVCC-WINNING-ADAPTER-RESULTS.json).']
-        (ROOT / 'MVCC-WINNING-ADAPTER-RESULTS.md').write_text('\n'.join(lines)+'\n')
+                 f'Structured result: [{result_prefix}-RESULTS.json]({result_prefix}-RESULTS.json).']
+        if reset:
+            lines += ['', f"Docker profile benchmark was deleted with its data and recreated. Engine ID changed from `{reset['docker_before']['ID']}` to `{reset['docker_after']['ID']}`. VM resources were preserved: {reset['resources_preserved']}.",
+                      'The Docker instance was already empty before reset; it was empty again after recreation. Other VM profiles and host-side benchmark evidence were preserved. Full reset evidence is embedded in the structured result.']
+        (ROOT / f'{result_prefix}-RESULTS.md').write_text('\n'.join(lines)+'\n')
         print(json.dumps({key: state[key] for key in ['name','state','reward','official_tests','agent_seconds','historical_primary_messages_match']}), flush=True)
     except BaseException as error:
         state.update(state='needs_attention', error=str(error))
@@ -160,4 +174,8 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--label', default='mvcc-winning-adapter')
+    parser.add_argument('--reset-evidence', type=Path)
+    args = parser.parse_args()
+    run(args.label, args.reset_evidence)
