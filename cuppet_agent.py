@@ -19,6 +19,7 @@ class CuppetOptions(AgentOptions):
     reasoning_effort: str = "max"
     timeout_sec: int = Field(default=0, ge=0)
     source_revision: str = "58270905de9e794f12c6dcf6b26e07a069e462ed"
+    matched_tst_mode: str = ""
     dynamic_enrichment: bool = False
     pre_run_enrichment: bool = False
     enrichment_interval_ms: int = Field(default=60000, gt=0)
@@ -87,6 +88,7 @@ class CuppetDesktopAgent(BaseAgent):
                     f"{quote(self.options.reasoning_effort)} {self.options.timeout_sec} full"
                 ),
                 env={"CODEX_HOME": home,
+                     "CUPPET_MATCHED_TST_MODE": self.options.matched_tst_mode,
                      "CUPPET_DYNAMIC_ENRICHMENT": "1" if self.options.dynamic_enrichment else "0",
                      "CUPPET_PRERUN_ENRICHMENT": "1" if self.options.pre_run_enrichment else "0",
                      "CUPPET_DYNAMIC_ENRICHMENT_INTERVAL_MS": str(self.options.enrichment_interval_ms)},

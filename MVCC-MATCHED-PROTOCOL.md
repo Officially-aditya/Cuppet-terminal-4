@@ -1,0 +1,11 @@
+# Matched MVCC comparison protocol
+
+Run three fresh repairs per arm using GPT-6 Luna at max effort. Fixed order: native, unconfigured, unconfigured, native, native, unconfigured. Run sequentially with concurrency one. Each attempt starts with the supplied broken project in a new container and fresh Cuppet state, conversation, and isolated Codex profile. Retain all scheduled attempts; do not retry based on reward. The official task allowance remains eight hours, with no added agent time cap.
+
+The source is pinned to Cuppet 63a4febd561630d67f126caa9ea2b2154fa87d6b, Codex 0.162.1 and native TST 9f2a8ae63555b7534ee1ccfe211efce1ad46f630. Both arms use the normal Docker runtime entry point, full Cuppet tool policy, all ten advertised tools, and the current completion/testing developer instructions. Disable background enrichment, PE3 and orchestration in both. Copy only subscription auth and a minimal web-disabled configuration into the fresh Codex profile; host AGENTS instructions and prior chats are excluded.
+
+Vary only the TST interface. Both arms load the same benchmark-only preloader. Native mode leaves TST methods unchanged. The unconfigured control delegates the interface to the existing TstBridge without socket/token credentials, so Cuppet receives ordinary unavailable errors and can use its existing fallback editing path. No policy is shortened and no tool is removed. This compares two Cuppet configurations, not Cuppet against native Codex.
+
+Run an isolated uppercase-file integration preflight for each arm before any scored attempt. Capture actual thread/start and turn/start parameters, excluding account/auth requests. Verify model, reasoning effort, policy, developer instructions, all tool schemas, and all 14 initial workspace file hashes. Compare the complete initial input hashes and report any derived-context difference explicitly. Fail the comparison on a mismatched controlled input. Archive independent job logs and official verifier results without feeding grading feedback, hidden tests, prior implementations, or previous conversations to the models.
+
+Report per-attempt reward, official test count, agent time, primary execution time, tokens, validation rounds, integrity checks, and infrastructure errors. A three-attempt sample per arm is exploratory and cannot establish a broad causal performance claim.

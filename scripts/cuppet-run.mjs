@@ -1,7 +1,7 @@
 // Drive the same JSON protocol and runtime entry point used by the Electron app.
 import { spawn, execFileSync } from 'node:child_process';
 import { randomUUID, createHash } from 'node:crypto';
-import { readFile, mkdir, writeFile, access, cp } from 'node:fs/promises';
+import { readFile, readdir, mkdir, writeFile, access, cp } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -16,6 +16,22 @@ if (permission === 'full' && !await access('/.dockerenv').then(() => true, () =>
   throw new Error('Full access is restricted to the disposable Docker task container.');
 }
 const source = resolve(sourcePath);
+const matchedMode = process.env.CUPPET_MATCHED_TST_MODE || '';
+if (matchedMode && !['native', 'unconfigured'].includes(matchedMode)) throw new Error('Invalid matched TST mode');
+const hash = (value) => createHash('sha256').update(value).digest('hex');
+async function workspaceManifest(directory, prefix = '') {
+  const files = [];
+  for (const entry of (await readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+    const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) files.push(...await workspaceManifest(join(directory, entry.name), path));
+    else if (entry.isFile()) {
+      const bytes = await readFile(join(directory, entry.name));
+      files.push({ path, bytes: bytes.length, sha256: hash(bytes) });
+    } else throw new Error(`Unexpected initial workspace entry: ${path}`);
+  }
+  return files;
+}
+const initialWorkspace = matchedMode ? await workspaceManifest(resolve(projectPath)) : null;
 const { resolveManagedTstBinary } = await import(pathToFileURL(join(source, 'src/runtime/tst-supervisor.mjs')));
 const nativeTst = resolveManagedTstBinary();
 if (!nativeTst || execFileSync(nativeTst, ['--protocol'], { encoding: 'utf8', timeout: 10_000 }).trim() !== 'cuppet.tst.v3') {
@@ -32,6 +48,7 @@ const stderr = createWriteStream(join(output, 'cuppet-stderr.log'), { mode: 0o60
 const dynamicEnabled = process.env.CUPPET_DYNAMIC_ENRICHMENT === '1';
 const preRunEnabled = process.env.CUPPET_PRERUN_ENRICHMENT === '1';
 if (dynamicEnabled && preRunEnabled) throw new Error('Select one enrichment mode');
+if (matchedMode && (dynamicEnabled || preRunEnabled)) throw new Error('Matched TST comparison requires enrichment disabled');
 const dynamicEvents = [];
 
 const { listCodexModels } = await import(pathToFileURL(join(source, 'src/runtime/providers/backends/codex.mjs')));
@@ -41,7 +58,8 @@ if (!catalog.loggedIn || !selected?.efforts?.includes(effort)) {
   throw new Error(`The signed-in Codex provider does not offer ${model} with ${effort} reasoning.`);
 }
 
-const child = spawn(process.execPath, [join(source, 'src/runtime/main.mjs')], {
+const runtimeArgs = matchedMode ? ['--import', join(source, 'cuppet-matched-control.mjs')] : [];
+const child = spawn(process.execPath, [...runtimeArgs, join(source, 'src/runtime/main.mjs')], {
   cwd: projectPath,
   env: {
     ...process.env,
@@ -50,6 +68,7 @@ const child = spawn(process.execPath, [join(source, 'src/runtime/main.mjs')], {
     CUPPET_PROVIDER_BENCHMARK: '1',
     CUPPET_EXECUTION_BENCHMARK_POLICY: 'optimized',
     CUPPET_ORCHESTRATOR: '0',
+    ...(matchedMode ? { CUPPET_MATCHED_COMPARISON: '1', CUPPET_PE3: '0' } : {}),
   },
   stdio: ['pipe', 'pipe', 'pipe'],
 });
@@ -112,8 +131,14 @@ try {
   await request('health');
   await request(dynamicEnabled ? 'background.resume' : 'background.pause');
   const project = await request('project.add-local', { path: resolve(projectPath), name: 'Terminal-Bench' });
-  await request('tst.graph.locate', { projectId: project.id, pattern: '*', limit: 1 });
-  if (!(await request('tst.status')).connected) throw new Error('Native TST did not connect; no model task was started.');
+  if (matchedMode !== 'unconfigured') {
+    await request('tst.graph.locate', { projectId: project.id, pattern: '*', limit: 1 });
+    const status = await request('tst.status');
+    if (!status.connected || status.mode !== 'managed-native') throw new Error('Native TST did not connect; no model task was started.');
+  } else {
+    const status = await request('tst.status');
+    if (status.configured || status.connected || status.mode !== 'unconfigured-control') throw new Error('The unconfigured TST control was not applied');
+  }
   const session = await request('session.create', { projectId: project.id });
   sessionId = session.id;
   await request('session.rename', { sessionId, title: 'Terminal-Bench task' });
@@ -170,6 +195,34 @@ try {
       }, {}),
     };
     result.source = JSON.parse(await readFile(join(source, 'benchmark-source.json'), 'utf8'));
+    if (matchedMode) {
+      const records = (await readFile(join(dataDir, 'benchmark-provider-inputs.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse);
+      const threads = records.filter((record) => record.message.method === 'thread/start');
+      const turns = records.filter((record) => record.message.method === 'turn/start');
+      if (threads.length !== 1 || turns.length !== 1) throw new Error('Expected one primary thread and one primary turn');
+      const thread = threads[0].message.params;
+      const turn = turns[0].message.params;
+      const text = (turn.input ?? []).filter((item) => item.type === 'text').map((item) => item.text).join('\n');
+      const policy = text.match(/<CUPPET_TOOL_POLICY\b[\s\S]*?<\/CUPPET_TOOL_POLICY>/)?.[0];
+      const developer = thread.developerInstructions ?? '';
+      const context = (text.match(/<CUPPET_CONTEXT\b[\s\S]*?<\/CUPPET_CONTEXT>/g) ?? []).join('\n');
+      result.matchedComparison = {
+        mode: matchedMode, instructionSha256: hash(instruction), initialWorkspace,
+        initialWorkspaceSha256: hash(JSON.stringify(initialWorkspace)),
+        initialInputSha256: hash(text), initialContext: context,
+        policySha256: hash(policy ?? ''), developerInstructionsSha256: hash(developer),
+        toolSchemasSha256: hash(JSON.stringify(thread.dynamicTools ?? [])),
+        tools: (thread.dynamicTools ?? []).map((tool) => tool.name),
+        model: thread.model, effort: thread.config?.model_reasoning_effort,
+        sourceVerified: hash(developer) === result.source.developer_instructions_sha256 && hash(policy ?? '') === result.source.system_prompt_sha256,
+        inputContainsOriginalTask: text.includes(instruction),
+        controlSha256: hash(await readFile(join(source, 'cuppet-matched-control.mjs'))),
+        inputAuditFile: 'cuppet-data/benchmark-provider-inputs.jsonl',
+        isolatedCodexHome: process.env.CODEX_HOME,
+        backgroundEnrichment: false, pe3: false, orchestration: false,
+      };
+      if (!result.matchedComparison.sourceVerified || !result.matchedComparison.inputContainsOriginalTask || dynamicEvents.length) throw new Error('Matched model input audit failed');
+    }
     if (preRunEnabled) {
       const requests = (await readFile(join(dataDir, 'benchmark-provider-inputs.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse);
       const inputs = requests.filter((record) => record.message.method === 'turn/start');

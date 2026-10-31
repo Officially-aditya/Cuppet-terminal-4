@@ -83,6 +83,8 @@ def prepare(cuppet_source):
         raise RuntimeError("Cuppet requires json5 2.2.3 for this pinned revision.")
     shutil.copytree(json5, snapshot / "node_modules" / "json5")
     shutil.copy2(ROOT / "scripts" / "cuppet-run.mjs", snapshot / "cuppet-run.mjs")
+    if SETTINGS.get("matched_comparison"):
+        shutil.copy2(ROOT / "scripts" / "cuppet-matched-control.mjs", snapshot / "cuppet-matched-control.mjs")
 
     # Compile exactly the native TST revision shipped with this desktop build.
     # musl produces a portable binary for the benchmark's different Linux bases.
