@@ -286,3 +286,19 @@ export CUPPET_BENCHMARK_SETTINGS="$PWD/settings-mvcc-completion.json"
 
 Progress: `reports/mvcc-completion-latest.json`.
 Final summary: `MVCC-COMPLETION-RESULTS.md`.
+
+## MVCC with requirement-driven testing instructions
+
+`settings-mvcc-proper-tests.json` repeats the previous Luna/max, one-pass
+repository preparation setup with one additional developer instruction: test
+the full requirements using boundary and failure cases that could disprove the
+fix, rather than relying on happy-path checks tailored to the patch. Where
+practical, establish that a new regression test fails on the original code and
+passes after the fix; investigate failures instead of weakening tests.
+
+Run with `CUPPET_BENCHMARK_SETTINGS="$PWD/settings-mvcc-proper-tests.json"`
+using the existing prepare and `scripts/run-prerun-mvcc.py` commands. Periodic
+enrichment remains disabled. The private audit verifies the exact developer
+instructions and initial memories. Progress is saved to
+`reports/mvcc-proper-tests-latest.json`; the final summary is
+`MVCC-PROPER-TESTS-RESULTS.md`. Earlier attempts remain separate.
