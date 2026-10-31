@@ -205,22 +205,26 @@ try {
       const text = (turn.input ?? []).filter((item) => item.type === 'text').map((item) => item.text).join('\n');
       const policy = text.match(/<CUPPET_TOOL_POLICY\b[\s\S]*?<\/CUPPET_TOOL_POLICY>/)?.[0];
       const developer = thread.developerInstructions ?? '';
+      const toolSource = await readFile(join(source, 'src/runtime/tool-runtime.mjs'), 'utf8');
+      const policyStart = toolSource.indexOf('function injectToolPolicy(');
+      const policySource = toolSource.slice(policyStart, toolSource.indexOf('\nfunction parseArguments', policyStart));
       const context = (text.match(/<CUPPET_CONTEXT\b[\s\S]*?<\/CUPPET_CONTEXT>/g) ?? []).join('\n');
       result.matchedComparison = {
         mode: matchedMode, instructionSha256: hash(instruction), initialWorkspace,
         initialWorkspaceSha256: hash(JSON.stringify(initialWorkspace)),
         initialInputSha256: hash(text), initialContext: context,
-        policySha256: hash(policy ?? ''), developerInstructionsSha256: hash(developer),
+        policySha256: hash(policy ?? ''), policySourceSha256: hash(policySource), developerInstructionsSha256: hash(developer),
         toolSchemasSha256: hash(JSON.stringify(thread.dynamicTools ?? [])),
         tools: (thread.dynamicTools ?? []).map((tool) => tool.name),
-        model: thread.model, effort: thread.config?.model_reasoning_effort,
-        sourceVerified: hash(developer) === result.source.developer_instructions_sha256 && hash(policy ?? '') === result.source.system_prompt_sha256,
+        model: thread.model, effort: thread.config?.model_reasoning_effort, nodeVersion: process.version,
+        sourceVerified: hash(developer) === result.source.developer_instructions_sha256 && hash(policySource) === result.source.system_prompt_sha256 && hash(policy ?? '') === result.source.rendered_tool_policy_sha256,
         inputContainsOriginalTask: text.includes(instruction),
         controlSha256: hash(await readFile(join(source, 'cuppet-matched-control.mjs'))),
         inputAuditFile: 'cuppet-data/benchmark-provider-inputs.jsonl',
         isolatedCodexHome: process.env.CODEX_HOME,
         backgroundEnrichment: false, pe3: false, orchestration: false,
       };
+      await writeFile(join(output, 'cuppet-result.json'), `${JSON.stringify(result, null, 2)}\n`, { mode: 0o600 });
       if (!result.matchedComparison.sourceVerified || !result.matchedComparison.inputContainsOriginalTask || dynamicEvents.length) throw new Error('Matched model input audit failed');
     }
     if (preRunEnabled) {

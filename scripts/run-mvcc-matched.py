@@ -111,7 +111,8 @@ def run():
                 raise RuntimeError(f'Model input audit failed for {mode}: {audit}')
             assert audit['mode'] == mode and audit['model'] == settings['model'] and audit['effort'] == settings['reasoning_effort']
             assert audit['developerInstructionsSha256'] == settings['developer_instructions_sha256']
-            assert audit['policySha256'] == settings['system_prompt_sha256'] and len(audit['tools']) == 10
+            assert audit['policySourceSha256'] == settings['system_prompt_sha256'] and len(audit['tools']) == 10
+            assert audit['policySha256'] == settings['rendered_tool_policy_sha256']
             assert not row.get('enrichment_events') and not audit['backgroundEnrichment']
             assert summary['source']['cuppet_revision'] == settings['cuppet_revision']
             assert audit['isolatedCodexHome'] == '/tmp/cuppet-codex-home'
@@ -121,7 +122,7 @@ def run():
             if not preflight:
                 assert sorted(audit['initialWorkspace'], key=lambda file: file['path']) == expected_files
                 keys = ['instructionSha256', 'initialWorkspaceSha256', 'policySha256',
-                        'developerInstructionsSha256', 'toolSchemasSha256', 'tools', 'model', 'effort', 'controlSha256']
+                        'developerInstructionsSha256', 'policySourceSha256', 'toolSchemasSha256', 'tools', 'model', 'effort', 'nodeVersion', 'controlSha256']
                 shared = {key: audit[key] for key in keys}
                 if state['audit_reference'] is None:
                     state['audit_reference'] = shared
@@ -172,6 +173,7 @@ def run():
                   f"Source: `{settings['cuppet_revision']}`; bundle SHA-256: `{identity['bundle_sha256']}`.",
                   'Each attempt uses a separate clean container, conversation, and state directory, with the original eight-hour task budget and no added time cap. Every scheduled attempt is retained, including failures; no score-based retries.',
                   'No official test contents, grader feedback, prior solution, or prior-run conversation is passed to any agent.', '',
+                  'An earlier native integration fixture completed its task, then was rejected by a harness check that compared a rendered-policy hash to a source-function hash. That check was corrected before any scored MVCC attempt; its evidence remains in reports/mvcc-matched-20261031T072125Z.', '',
                   'Three attempts per arm can reveal repeated behavior, but remain too few to establish a reliable general performance difference.', '',
                   f'Raw evidence: `reports/{name}/status.json` and the job paths listed in `MVCC-MATCHED-RESULTS.json`.']
         (ROOT / settings['result_report']).write_text('\n'.join(lines) + '\n')
