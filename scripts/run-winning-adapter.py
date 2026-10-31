@@ -90,6 +90,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
                  original_task_config=str(config['tasks'][0]['path']))
     state['experiment_label'] = label
     state['docker_reset'] = reset
+    state['container_path_aliases_enabled'] = native_tst
     if reset:
         state['build_network_mode'] = 'default (build phase only; runtime networking unchanged)'
     previous_path = ROOT / ('MVCC-DOCKER-RESET-RESULTS.json' if native_tst else 'MVCC-WINNING-ADAPTER-RESULTS.json')
@@ -190,6 +191,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
                      primary_request_count=len(turns), initial_workspace=initial,
                      final_message=agent.get('final_message'), task_checksum=raw.get('task_checksum'))
         if native_tst:
+            aliases_path = audit_dir / 'container-path-aliases.jsonl'
+            state['container_path_aliases'] = [json.loads(line) for line in aliases_path.read_text().splitlines()] if aliases_path.is_file() else []
             previous = json.loads(previous_path.read_text())
             previous_data = Path(previous['state_dir']) / 'mvcc-lsm-compaction/original/data/provider-inputs.jsonl'
             previous_records = [json.loads(line) for line in previous_data.read_text().splitlines()]
@@ -199,13 +202,13 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
             assert state['task_checksum'] == previous['task_checksum']
             state['tool_schemas_match_latest_without_tst'] = True
             state['native_developer_match_latest_without_tst'] = True
-            state['tst_adapter_hashes'] = {name: digest((ROOT / 'native_tst_adapter' / name).read_bytes()) for name in ['cuppet_trial.mjs', 'native-tst.mjs']}
+            state['tst_adapter_hashes'] = {name: digest((ROOT / 'native_tst_adapter' / name).read_bytes()) for name in ['cuppet_trial.mjs', 'native-tst.mjs', 'container-tool-paths.mjs']}
         persist()
         save(ROOT / f'{result_prefix}-RESULTS.json', state)
         lines = ['# MVCC with native TST after Docker reset' if native_tst else ('# MVCC after Docker VM reset' if reset else '# MVCC winning-adapter retry'), '',
                  f"Reward: **{reward}**; official tests: **{ctrf['summary']['passed']}/{ctrf['summary']['tests']}**; infrastructure error: **{error or 'none'}**.",
                  f"Agent time: {seconds:.2f}s; controller execution: {state['primary_seconds']:.2f}s. Natural completion: {agent['natural_completion']}.", '',
-                 'One fresh Original-arm repair. The archived Python bridge is unchanged; native mode adds the product RuntimeTstManager to its JavaScript controller and changes one TST availability sentence. No reviews, handoffs, previous implementation or grading feedback were given to the model.' if native_tst else 'One fresh Original-arm repair with the archived Python and JavaScript adapter files unchanged. No reviews, handoffs, previous implementation or grading feedback were given to the model.',
+                 'One fresh Original-arm repair. The archived Python bridge is unchanged; native mode adds the product RuntimeTstManager, maps public /app filesystem arguments to the host mirror, and changes one TST availability sentence. No reviews, handoffs, previous implementation or grading feedback were given to the model.' if native_tst else 'One fresh Original-arm repair with the archived Python and JavaScript adapter files unchanged. No reviews, handoffs, previous implementation or grading feedback were given to the model.',
                  f"GPT-6 Luna/max, Harbor 0.25.0, host Node v22.21.0, inherited host Codex profile, five tools and the short headless policy. Native TST enabled: {native_tst}. Background enrichment/orchestration/PE3 disabled. The original uncapped task configuration was reused.",
                  'Read-only instrumentation captured actual thread/start and turn/start requests and all 14 broken starting files. Native mode verifies the original task, policy with one availability-sentence change, and separately records any TST-derived context. Tool schemas and native developer instructions match the latest TST-disabled run.' if native_tst else 'Read-only instrumentation captured actual thread/start and turn/start requests and the broken starting workspace before the first model request. All 14 initial files matched; primary messages and selection matched the historical capture exactly. The five actual tool schemas and current native developer instructions were captured.',
                  'The passing historical run did not capture its native developer instructions, source revision or profile hashes. Those cannot be proven identical retrospectively; this run records the current source revision and profile hashes. Paths, session IDs and timestamps are necessarily fresh.', '',

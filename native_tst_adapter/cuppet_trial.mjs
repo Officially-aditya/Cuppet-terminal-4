@@ -1,3 +1,4 @@
+import { wrapContainerToolExecution } from './container-tool-paths.mjs';
 import { createNativeTst } from './native-tst.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
@@ -118,7 +119,8 @@ CodexSessionRuntime.prototype.runTurn = async function (input = {}, hooks = {}) 
     })),
   };
   await appendFile(contextLog, `${JSON.stringify(frame)}\n`);
-  return originalRunTurn.call(this, input, hooks);
+  const executeTool = wrapContainerToolExecution(hooks.executeTool, (record) => appendFile(join(dataDir, 'container-path-aliases.jsonl'), `${JSON.stringify(record)}\n`));
+  return originalRunTurn.call(this, input, { ...hooks, executeTool });
 };
 
 const databasePath = join(dataDir, 'conversations.sqlite3');
