@@ -36,7 +36,7 @@ def save(path, value):
     path.write_text(json.dumps(value, indent=2) + '\n')
 
 
-def run(label='mvcc-winning-adapter', reset_evidence=None):
+def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
     assert re.fullmatch(r'[a-z0-9-]+', label), 'Use a simple experiment label'
     reset = json.loads(Path(reset_evidence).read_text()) if reset_evidence else None
     if reset:
@@ -65,7 +65,9 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
     config = json.loads((HISTORICAL / 'jobs/agentstress-20261031T062913Z-mvcc-lsm-compaction-original/config.json').read_text())
     config['job_name'] = job_name
     config['jobs_dir'] = str(ROOT / 'jobs')
-    config['agents'][0]['name'] = 'winning_adapter.harbor_cuppet_agent:CuppetAgent'
+    config['agents'][0]['name'] = ('native_tst_adapter' if native_tst else 'winning_adapter') + '.harbor_cuppet_agent:CuppetAgent'
+    if native_tst:
+        assert digest((ROOT / 'native_tst_adapter/harbor_cuppet_agent.py').read_bytes()) == EXPECTED['harbor_cuppet_agent.py']
     config['agents'][0]['kwargs'].update(state_dir=str(state_dir), node_bin=str(wrapper))
     if reset:
         config.setdefault('environment', {}).setdefault('extra_docker_compose', []).append(str(ROOT / 'configs/mvcc-build-network.yaml'))
@@ -78,7 +80,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                  source_revision=PIN, adapter_hashes=EXPECTED, harbor_version='0.25.0', node_version='v22.21.0',
                  codex_version='0.162.1', codex_command=str(CODEX),
                  model='gpt-6-luna', reasoning_effort='max', condition='original',
-                 background_enrichment=False, native_tst_configured=False, headless_policy=True,
+                 background_enrichment=False, native_tst_configured=native_tst, headless_policy=True,
                  fresh_workspace=True, fresh_conversation=True, host_profile=str(home),
                  current_host_profile_hashes=profiles, historical_host_profile_hashes_available=False,
                  source_revision_at_historical_run_was_not_recorded=True,
@@ -90,8 +92,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
     state['docker_reset'] = reset
     if reset:
         state['build_network_mode'] = 'default (build phase only; runtime networking unchanged)'
-    previous_path = ROOT / 'MVCC-WINNING-ADAPTER-RESULTS.json'
-    if reset and previous_path.is_file():
+    previous_path = ROOT / ('MVCC-DOCKER-RESET-RESULTS.json' if native_tst else 'MVCC-WINNING-ADAPTER-RESULTS.json')
+    if (reset or native_tst) and previous_path.is_file():
         previous_profiles = json.loads(previous_path.read_text())['current_host_profile_hashes']
         state['host_profile_matches_previous_retry'] = profiles == previous_profiles
         state['changed_host_profile_files'] = [key for key, value in profiles.items() if value != previous_profiles.get(key)]
@@ -142,7 +144,23 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
         threads = [r for r in records if r['message']['method'] == 'thread/start']
         turns = [r for r in records if r['message']['method'] == 'turn/start']
         assert len(frames) == len(historical_frames) == len(threads) == len(turns) == 1
-        assert frames[0]['messages'] == historical_frames[0]['messages'] and frames[0]['selection'] == historical_frames[0]['selection']
+        historical_match = frames[0]['messages'] == historical_frames[0]['messages']
+        contexts = []
+        if native_tst:
+            expected_messages = json.loads(json.dumps(historical_frames[0]['messages']))
+            for message in expected_messages:
+                if message['role'] == 'system':
+                    message['content'] = message['content'].replace('without a configured TST edit-batch daemon', 'with a configured native TST edit-batch daemon')
+            contexts = [message for message in frames[0]['messages'] if message['role'] == 'system' and message['content'].startswith('<CUPPET_CONTEXT')]
+            core = [message for message in frames[0]['messages'] if message not in contexts]
+            assert core == expected_messages, 'Changes exceeded the TST availability sentence and derived TST context'
+            native = agent['native_tst']
+            assert native['before']['mode'] == native['after']['mode'] == 'managed-native'
+            assert native['before']['connected'] and native['after']['connected']
+            assert native['taskCalls'].get('prepareContext', 0) > 0
+        else:
+            assert historical_match
+        assert frames[0]['selection'] == historical_frames[0]['selection']
         params = threads[0]['message']['params']
         tools = [tool['name'] for tool in params['dynamicTools']]
         assert set(tools) == {'tst_explore', 'tst_read', 'tst_edit_batch', 'tst_validate', 'cuppet_execute'}
@@ -165,19 +183,31 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                      primary_seconds=agent['provider_wall_clock_duration_ms']/1000,
                      official_tests=ctrf['summary'], failed_tests=[t['name'] for t in ctrf['tests'] if t['status']=='failed'],
                      usage=agent.get('provider_usage'), natural_completion=agent['natural_completion'],
-                     historical_primary_messages_match=True, initial_workspace_verified=True,
+                     historical_primary_messages_match=historical_match, initial_workspace_verified=True,
+                     primary_task_and_policy_verified=True, initial_tst_context=contexts, native_tst=agent.get('native_tst'),
                      captured_tools=tools, native_developer_hash=developer_hash,
                      historical_native_developer_capture_available=False,
                      primary_request_count=len(turns), initial_workspace=initial,
                      final_message=agent.get('final_message'), task_checksum=raw.get('task_checksum'))
+        if native_tst:
+            previous = json.loads(previous_path.read_text())
+            previous_data = Path(previous['state_dir']) / 'mvcc-lsm-compaction/original/data/provider-inputs.jsonl'
+            previous_records = [json.loads(line) for line in previous_data.read_text().splitlines()]
+            previous_thread = next(record['message']['params'] for record in previous_records if record['message']['method'] == 'thread/start')
+            assert params['dynamicTools'] == previous_thread['dynamicTools'], 'Tool schemas changed'
+            assert params['developerInstructions'] == previous_thread['developerInstructions'], 'Native developer instructions changed'
+            assert state['task_checksum'] == previous['task_checksum']
+            state['tool_schemas_match_latest_without_tst'] = True
+            state['native_developer_match_latest_without_tst'] = True
+            state['tst_adapter_hashes'] = {name: digest((ROOT / 'native_tst_adapter' / name).read_bytes()) for name in ['cuppet_trial.mjs', 'native-tst.mjs']}
         persist()
         save(ROOT / f'{result_prefix}-RESULTS.json', state)
-        lines = ['# MVCC after Docker VM reset' if reset else '# MVCC winning-adapter retry', '',
+        lines = ['# MVCC with native TST after Docker reset' if native_tst else ('# MVCC after Docker VM reset' if reset else '# MVCC winning-adapter retry'), '',
                  f"Reward: **{reward}**; official tests: **{ctrf['summary']['passed']}/{ctrf['summary']['tests']}**; infrastructure error: **{error or 'none'}**.",
                  f"Agent time: {seconds:.2f}s; controller execution: {state['primary_seconds']:.2f}s. Natural completion: {agent['natural_completion']}.", '',
-                 'One fresh Original-arm repair with the archived Python and JavaScript adapter files unchanged. No reviews, handoffs, previous implementation or grading feedback were given to the model.',
-                 'GPT-6 Luna/max, Harbor 0.25.0, host Node v22.21.0, inherited host Codex profile, five tools, the archived short headless policy, TST unconfigured, background enrichment/orchestration/PE3 disabled. The original uncapped task configuration was reused.',
-                 'Read-only instrumentation captured actual thread/start and turn/start requests and the broken starting workspace before the first model request. All 14 initial files matched; primary messages and selection matched the historical capture exactly. The five actual tool schemas and current native developer instructions were captured.',
+                 'One fresh Original-arm repair. The archived Python bridge is unchanged; native mode adds the product RuntimeTstManager to its JavaScript controller and changes one TST availability sentence. No reviews, handoffs, previous implementation or grading feedback were given to the model.' if native_tst else 'One fresh Original-arm repair with the archived Python and JavaScript adapter files unchanged. No reviews, handoffs, previous implementation or grading feedback were given to the model.',
+                 f"GPT-6 Luna/max, Harbor 0.25.0, host Node v22.21.0, inherited host Codex profile, five tools and the short headless policy. Native TST enabled: {native_tst}. Background enrichment/orchestration/PE3 disabled. The original uncapped task configuration was reused.",
+                 'Read-only instrumentation captured actual thread/start and turn/start requests and all 14 broken starting files. Native mode verifies the original task, policy with one availability-sentence change, and separately records any TST-derived context. Tool schemas and native developer instructions match the latest TST-disabled run.' if native_tst else 'Read-only instrumentation captured actual thread/start and turn/start requests and the broken starting workspace before the first model request. All 14 initial files matched; primary messages and selection matched the historical capture exactly. The five actual tool schemas and current native developer instructions were captured.',
                  'The passing historical run did not capture its native developer instructions, source revision or profile hashes. Those cannot be proven identical retrospectively; this run records the current source revision and profile hashes. Paths, session IDs and timestamps are necessarily fresh.', '',
                  f"Cuppet source: `{PIN}`. Original adapter hashes: `{EXPECTED}`.",
                  f"Raw evidence: `reports/{name}/status.json`, `reports/{name}/state/`, and `{state['job']}`.",
@@ -187,6 +217,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                       'The Docker instance was already empty before reset; it was empty again after recreation. Other VM profiles and host-side benchmark evidence were preserved. Full reset evidence is embedded in the structured result.',
                       'Docker Compose 5.6/buildx 0.38 rejected the archived host-network build workaround. A build-only overlay switched image construction to the standard Docker network; task files, Dockerfile and runtime networking were unchanged. Setup-only failures were retained before any model execution.',
                       f"Host profile matched the preceding retry: {state.get('host_profile_matches_previous_retry')}; changed files: {state.get('changed_host_profile_files')}. The model and effort were explicitly requested and the original Codex 0.162.1 executable was pinned for this job."]
+        if native_tst:
+            lines += ['', f"Native daemon connected before and after model execution. TST provenance and actual call counts: `{state['native_tst']}`.", f"Host profile matched the latest TST-disabled run: {state.get('host_profile_matches_previous_retry')}.", 'The Docker VM was reused after the recorded reset, with a fresh task container, session, workspace and TST store.']
         (ROOT / f'{result_prefix}-RESULTS.md').write_text('\n'.join(lines)+'\n')
         print(json.dumps({key: state[key] for key in ['name','state','reward','official_tests','agent_seconds','historical_primary_messages_match']}), flush=True)
     except BaseException as error:
@@ -199,5 +231,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--label', default='mvcc-winning-adapter')
     parser.add_argument('--reset-evidence', type=Path)
+    parser.add_argument('--native-tst', action='store_true')
     args = parser.parse_args()
-    run(args.label, args.reset_evidence)
+    run(args.label, args.reset_evidence, args.native_tst)
