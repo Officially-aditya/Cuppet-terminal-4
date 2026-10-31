@@ -1,0 +1,11 @@
+# MVCC passing-adapter replication
+
+Run one fresh Original-arm repair with GPT-6 Luna/max. Reuse the Python and JavaScript adapter snapshots saved in the passing run mvcc-lsm-compaction-run-20261031T062913Z without editing them. They are vendored in winning_adapter and checked by SHA-256 before launch. The earlier Continue/Fresh/Structured review arms are excluded because they start on the repaired workspace.
+
+Use the same host Cuppet runtime entry, Node v22.21.0, Harbor 0.25.0, inherited host Codex profile and task-overrides directory as the earlier run. Cuppet is currently pinned at 63a4febd561630d67f126caa9ea2b2154fa87d6b. The archived adapter supplies its short headless policy, five tools, an unconfigured TST bridge and no background enrichment, orchestration or PE3. Preserve its uncapped settings and original Docker build overlay. Use new workspace, state and conversation paths. Preserve the existing passing workspace and all six matched-comparison attempts.
+
+A separate Node preloader only records actual thread/start and turn/start parameters, excluding account/auth calls, and hashes all supplied project files before the first request. It does not edit request parameters. After the official verifier finishes, compare the primary messages and model selection against the archived passing capture, verify the five actual tool schemas, current native developer instructions and all 14 starting files. No prior solution, grading feedback, test content or handoff is given to the model.
+
+The old capture omitted actual tool schemas and native developer instructions, and the old manifest did not pin Cuppet's source revision or hash its profile configuration. Exact historical equality for those fields cannot be established retrospectively. Record current versions and profile hashes and distinguish those limits from verified message equality. Host profile access is inherited exactly as in the archived adapter; do not create a fresh Codex profile for this replication.
+
+Retain this single attempt regardless of its reward. Report natural completion, official test counts, reward, agent time, controller time, tokens, integrity checks and infrastructure errors. The archived adapter's legacy version string still mentions a pilot cap; actual execution uses AGENTSTRESS_UNLIMITED=1 and the archived uncapped task configuration.
