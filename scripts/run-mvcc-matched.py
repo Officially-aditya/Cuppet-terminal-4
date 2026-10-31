@@ -173,7 +173,7 @@ def run():
                   f"Source: `{settings['cuppet_revision']}`; bundle SHA-256: `{identity['bundle_sha256']}`.",
                   'Each attempt uses a separate clean container, conversation, and state directory, with the original eight-hour task budget and no added time cap. Every scheduled attempt is retained, including failures; no score-based retries.',
                   'No official test contents, grader feedback, prior solution, or prior-run conversation is passed to any agent.', '',
-                  'An earlier native integration fixture completed its task, then was rejected by a harness check that compared a rendered-policy hash to a source-function hash. That check was corrected before any scored MVCC attempt; its evidence remains in reports/mvcc-matched-20261031T072125Z.', '',
+                  'Two earlier native integration fixtures completed the public task, then were rejected by harness audits: a source-versus-rendered policy hash check and the provider’s normal removal of outer prompt whitespace. Both checks were corrected before any scored MVCC attempt. Evidence remains in reports/mvcc-matched-20261031T072125Z and reports/mvcc-matched-20261031T072630Z.', '',
                   'Three attempts per arm can reveal repeated behavior, but remain too few to establish a reliable general performance difference.', '',
                   f'Raw evidence: `reports/{name}/status.json` and the job paths listed in `MVCC-MATCHED-RESULTS.json`.']
         (ROOT / settings['result_report']).write_text('\n'.join(lines) + '\n')

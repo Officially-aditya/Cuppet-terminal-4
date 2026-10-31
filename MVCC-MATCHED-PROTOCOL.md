@@ -11,3 +11,5 @@ Run an isolated uppercase-file integration preflight for each arm before any sco
 Report per-attempt reward, official test count, agent time, primary execution time, tokens, validation rounds, integrity checks, and infrastructure errors. A three-attempt sample per arm is exploratory and cannot establish a broad causal performance claim.
 
 Setup note: the first native fixture completed the public task, but the harness audit compared the source policy hash with the rendered policy hash and rejected it. Both hashes are now verified separately. This correction occurred before any scored MVCC execution; the failed setup remains in reports/mvcc-matched-20261031T072125Z.
+
+A second setup-only fixture exposed the provider’s normal trimming of outer message whitespace. The audit now checks the complete original task body after that existing normalization and rejects missing or altered internal text. No scored MVCC execution occurred in either setup attempt; the second is retained in reports/mvcc-matched-20261031T072630Z.
