@@ -16,6 +16,7 @@ SOURCE = Path('/Users/addy/Documents/Cuppet-desktop')
 HISTORICAL = Path('/Users/addy/Documents/Codex/2026-10-29/che/work/agentstress-mvcc/mvcc-lsm-compaction-run-20261031T062913Z')
 PIN = '63a4febd561630d67f126caa9ea2b2154fa87d6b'
 NODE = Path('/Users/addy/.nvm/versions/node/v22.21.0/bin/node')
+CODEX = NODE.parent / 'codex'
 EXPECTED = {
     'harbor_cuppet_agent.py': 'd1bf3373ad1926b8fdeca278e3990797e8ffe51fb1b969c6c1e20a0a09d69944',
     'cuppet_trial.mjs': '4daaefb1b140b80c5b263314d93c6af34b2e7b8b338480a3093c62b2b2be69ca',
@@ -44,7 +45,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
         assert actual == reset['docker_after']['ID'], 'Docker changed after the recorded reset'
     assert subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=SOURCE, capture_output=True, text=True, check=True).stdout.strip() == PIN
     assert subprocess.run([NODE, '--version'], capture_output=True, text=True, check=True).stdout.strip() == 'v22.21.0'
-    assert '0.162.1' in subprocess.run(['codex', '--version'], capture_output=True, text=True, check=True).stdout
+    assert '0.162.1' in subprocess.run([CODEX, '--version'], capture_output=True, text=True, check=True).stdout
     for name, expected in EXPECTED.items():
         assert digest((ROOT / 'winning_adapter' / name).read_bytes()) == expected
         assert (ROOT / 'winning_adapter' / name).read_bytes() == (HISTORICAL / name).read_bytes()
@@ -73,6 +74,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                 for name in ['config.toml', 'AGENTS.md', 'AGENTS.override.md']}
     state = dict(name=name, pid=os.getpid(), state='running', started_at=now(), historical_run=str(HISTORICAL),
                  source_revision=PIN, adapter_hashes=EXPECTED, harbor_version='0.25.0', node_version='v22.21.0',
+                 codex_version='0.162.1', codex_command=str(CODEX),
                  model='gpt-6-luna', reasoning_effort='max', condition='original',
                  background_enrichment=False, native_tst_configured=False, headless_policy=True,
                  fresh_workspace=True, fresh_conversation=True, host_profile=str(home),
@@ -84,6 +86,11 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                  original_task_config=str(config['tasks'][0]['path']))
     state['experiment_label'] = label
     state['docker_reset'] = reset
+    previous_path = ROOT / 'MVCC-WINNING-ADAPTER-RESULTS.json'
+    if reset and previous_path.is_file():
+        previous_profiles = json.loads(previous_path.read_text())['current_host_profile_hashes']
+        state['host_profile_matches_previous_retry'] = profiles == previous_profiles
+        state['changed_host_profile_files'] = [key for key, value in profiles.items() if value != previous_profiles.get(key)]
     latest = ROOT / 'reports' / f'{label}-latest.json'
 
     def persist():
@@ -99,6 +106,9 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                 'CUPPET_DYNAMIC_ENRICHMENT', 'CUPPET_PRERUN_ENRICHMENT',
                 'CUPPET_MATCHED_TST_MODE', 'CUPPET_MATCHED_COMPARISON']:
         env.pop(key, None)
+    env['PATH'] = str(NODE.parent) + os.pathsep + env['PATH']
+    env['CUPPET_CODEX_BIN'] = str(CODEX)
+    assert shutil.which('codex-app-server', path=env['PATH']) is None, 'Unexpected standalone app-server would bypass the pinned CLI'
     env.update(DOCKER_HOST='unix:///Users/addy/.colima/benchmark/docker.sock',
                DOCKER_CONFIG='/Users/addy/Documents/Codex/2026-10-29/che/work/docker-config',
                UV_CACHE_DIR='/Users/addy/Documents/Codex/2026-10-29/che/work/uv-cache',
@@ -164,7 +174,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                  f'Structured result: [{result_prefix}-RESULTS.json]({result_prefix}-RESULTS.json).']
         if reset:
             lines += ['', f"Docker profile benchmark was deleted with its data and recreated. Engine ID changed from `{reset['docker_before']['ID']}` to `{reset['docker_after']['ID']}`. VM resources were preserved: {reset['resources_preserved']}.",
-                      'The Docker instance was already empty before reset; it was empty again after recreation. Other VM profiles and host-side benchmark evidence were preserved. Full reset evidence is embedded in the structured result.']
+                      'The Docker instance was already empty before reset; it was empty again after recreation. Other VM profiles and host-side benchmark evidence were preserved. Full reset evidence is embedded in the structured result.',
+                      f"Host profile matched the preceding retry: {state.get('host_profile_matches_previous_retry')}; changed files: {state.get('changed_host_profile_files')}. The model and effort were explicitly requested and the original Codex 0.162.1 executable was pinned for this job."]
         (ROOT / f'{result_prefix}-RESULTS.md').write_text('\n'.join(lines)+'\n')
         print(json.dumps({key: state[key] for key in ['name','state','reward','official_tests','agent_seconds','historical_primary_messages_match']}), flush=True)
     except BaseException as error:
