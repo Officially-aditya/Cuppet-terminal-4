@@ -10,6 +10,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path('/Users/addy/Documents/Cuppet-desktop')
@@ -54,7 +55,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
     result_prefix = label.upper()
     folder = ROOT / 'reports' / name
     folder.mkdir(parents=True)
-    state_dir = folder / 'state'
+    state_dir = Path(tempfile.mkdtemp(prefix=f'{label}-', dir='/private/tmp')) / 'state'
     attempt = state_dir / 'mvcc-lsm-compaction/original'
     audit_dir = attempt / 'data'
     workspace = attempt / 'workspace'
@@ -89,6 +90,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
                  no_added_agent_or_wall_cap=True, host_process_cwd=str(HISTORICAL.parents[2]),
                  original_task_config=str(config['tasks'][0]['path']))
     state['experiment_label'] = label
+    state['isolated_state_outside_git'] = True
+    state['archived_state_dir'] = str(folder / 'state')
     state['docker_reset'] = reset
     state['container_path_aliases_enabled'] = native_tst
     if reset:
@@ -132,6 +135,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
         assert len(paths) == 1
         trial_path = paths[0].parent
         raw = json.loads(paths[0].read_text())
+        if state_dir.exists():
+            shutil.copytree(state_dir, folder / 'state')
         agent_path = attempt / 'agentstress.json'
         if not agent_path.is_file():
             state['infrastructure_failure'] = raw.get('exception_info')
@@ -156,6 +161,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
             core = [message for message in frames[0]['messages'] if message not in contexts]
             assert core == expected_messages, 'Changes exceeded the TST availability sentence and derived TST context'
             native = agent['native_tst']
+            assert native['scopeVerified'], 'Native TST escaped the task workspace'
+            assert agent['project_root_verification']['verified'], 'Registered project did not match the isolated workspace'
             assert native['before']['mode'] == native['after']['mode'] == 'managed-native'
             assert native['before']['connected'] and native['after']['connected']
             assert native['taskCalls'].get('prepareContext', 0) > 0
@@ -186,6 +193,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
                      usage=agent.get('provider_usage'), natural_completion=agent['natural_completion'],
                      historical_primary_messages_match=historical_match, initial_workspace_verified=True,
                      primary_task_and_policy_verified=True, initial_tst_context=contexts, native_tst=agent.get('native_tst'),
+                     project_root_verification=agent.get('project_root_verification'),
                      captured_tools=tools, native_developer_hash=developer_hash,
                      historical_native_developer_capture_available=False,
                      primary_request_count=len(turns), initial_workspace=initial,
@@ -221,7 +229,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None, native_tst=False):
                       'Docker Compose 5.6/buildx 0.38 rejected the archived host-network build workaround. A build-only overlay switched image construction to the standard Docker network; task files, Dockerfile and runtime networking were unchanged. Setup-only failures were retained before any model execution.',
                       f"Host profile matched the preceding retry: {state.get('host_profile_matches_previous_retry')}; changed files: {state.get('changed_host_profile_files')}. The model and effort were explicitly requested and the original Codex 0.162.1 executable was pinned for this job."]
         if native_tst:
-            lines += ['', f"Native daemon connected before and after model execution. TST provenance and actual call counts: `{state['native_tst']}`.", f"Host profile matched the latest TST-disabled run: {state.get('host_profile_matches_previous_retry')}.", 'The Docker VM was reused after the recorded reset, with a fresh task container, session, workspace and TST store.']
+            lines += ['', f"Native daemon connected before and after model execution. TST provenance and actual call counts: `{state['native_tst']}`.", f"Host profile matched the latest TST-disabled run: {state.get('host_profile_matches_previous_retry')}.", 'The Docker VM was reused after the recorded reset. State and the task workspace were created outside any Git repository, preventing promotion to the benchmark repository. Registered project root and native TST project keys were verified before and after execution. A permanent state archive is stored beside the report.']
         (ROOT / f'{result_prefix}-RESULTS.md').write_text('\n'.join(lines)+'\n')
         print(json.dumps({key: state[key] for key in ['name','state','reward','official_tests','agent_seconds','historical_primary_messages_match']}), flush=True)
     except BaseException as error:

@@ -1,3 +1,5 @@
+> **Scope audit: not valid for a clean adapter comparison.** Cuppet registered the enclosing Benchmark Git repository as its project root instead of the task workspace. Original verifier grades remain unchanged; the native context could include benchmark infrastructure. This run is preserved, and an isolated-state rerun supersedes it for valid task-scope evidence.
+
 # MVCC winning-adapter retry
 
 Reward: **0.0**; official tests: **11/15**; infrastructure error: **none**.

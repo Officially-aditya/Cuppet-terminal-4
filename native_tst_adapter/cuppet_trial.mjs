@@ -2,7 +2,7 @@ import { wrapContainerToolExecution } from './container-tool-paths.mjs';
 import { createNativeTst } from './native-tst.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { appendFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, realpath, stat, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
@@ -202,6 +202,8 @@ async function initializeSession() {
       projectId,
     });
   }
+  const registeredRoot = database.getProject(projectId)?.canonicalPath;
+  if (!registeredRoot || await realpath(registeredRoot) !== await realpath(workspace)) throw new Error('Task project root was promoted outside the isolated workspace');
   activeSessionId = sessionId;
   await service.handle('orchestrator.set', { enabled: false });
   await service.handle('session.mode.set', { sessionId, mode: 'build' });
@@ -319,6 +321,7 @@ try {
     tool_executions: executions,
     model_context_capture: contextLogInfo,
     native_tst: nativeTst.snapshot(),
+    project_root_verification: { verified: await realpath(database.getProject(projectId).canonicalPath) === await realpath(workspace), registeredRoot: database.getProject(projectId).canonicalPath, expectedRoot: await realpath(workspace) },
     workspace_manifest: manifest,
   };
   if (payload.condition === 'original') {

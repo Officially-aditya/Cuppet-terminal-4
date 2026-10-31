@@ -436,5 +436,11 @@
   "tst_adapter_hashes": {
     "cuppet_trial.mjs": "ec31cef48adcd03dda11fa0587d7b21dc97cc5448d334a95aac405915f00152a",
     "native-tst.mjs": "a224ad86ce8e9a2102598aabae89db70974a48d3e2800867cc994b7c6aff7150"
+  },
+  "post_run_scope_audit": {
+    "valid_for_clean_adapter_comparison": false,
+    "registered_project_root": "/Users/addy/Documents/Benchmark",
+    "expected_workspace": "/Users/addy/Documents/Benchmark/reports/mvcc-native-tst-after-reset-20261031T175446Z/state/mvcc-lsm-compaction/original/workspace",
+    "issue": "Workspace was nested inside the benchmark Git repository; ProjectManager promoted it to the enclosing repository root. Native context could index benchmark infrastructure."
   }
 }
