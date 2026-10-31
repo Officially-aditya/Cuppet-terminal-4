@@ -68,7 +68,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
     config['agents'][0]['name'] = 'winning_adapter.harbor_cuppet_agent:CuppetAgent'
     config['agents'][0]['kwargs'].update(state_dir=str(state_dir), node_bin=str(wrapper))
     if reset:
-        config.setdefault('environment', {}).setdefault('extra_docker_compose', []).append(str(ROOT / 'configs/mvcc-build-entitlements.yaml'))
+        config.setdefault('environment', {}).setdefault('extra_docker_compose', []).append(str(ROOT / 'configs/mvcc-build-network.yaml'))
     config_path = folder / 'config.json'
     save(config_path, config)
     home = Path(os.environ.get('CODEX_HOME', '/Users/addy/.codex'))
@@ -89,7 +89,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
     state['experiment_label'] = label
     state['docker_reset'] = reset
     if reset:
-        state['build_network_entitlement'] = 'network.host (build phase only, matching the existing host-network build overlay)'
+        state['build_network_mode'] = 'default (build phase only; runtime networking unchanged)'
     previous_path = ROOT / 'MVCC-WINNING-ADAPTER-RESULTS.json'
     if reset and previous_path.is_file():
         previous_profiles = json.loads(previous_path.read_text())['current_host_profile_hashes']
@@ -129,7 +129,13 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
         assert len(paths) == 1
         trial_path = paths[0].parent
         raw = json.loads(paths[0].read_text())
-        agent = json.loads((attempt / 'agentstress.json').read_text())
+        agent_path = attempt / 'agentstress.json'
+        if not agent_path.is_file():
+            state['infrastructure_failure'] = raw.get('exception_info')
+            state['model_started'] = False
+            persist()
+            raise RuntimeError((raw.get('exception_info') or {}).get('exception_message') or 'Agent result missing before model execution')
+        agent = json.loads(agent_path.read_text())
         frames = [json.loads(line) for line in (audit_dir / 'model-context.jsonl').read_text().splitlines()]
         historical_frames = [json.loads(line) for line in (HISTORICAL / 'state/mvcc-lsm-compaction/original/data/model-context.jsonl').read_text().splitlines()]
         records = [json.loads(line) for line in (audit_dir / 'provider-inputs.jsonl').read_text().splitlines()]
@@ -170,7 +176,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                  f"Reward: **{reward}**; official tests: **{ctrf['summary']['passed']}/{ctrf['summary']['tests']}**; infrastructure error: **{error or 'none'}**.",
                  f"Agent time: {seconds:.2f}s; controller execution: {state['primary_seconds']:.2f}s. Natural completion: {agent['natural_completion']}.", '',
                  'One fresh Original-arm repair with the archived Python and JavaScript adapter files unchanged. No reviews, handoffs, previous implementation or grading feedback were given to the model.',
-                 'GPT-6 Luna/max, Harbor 0.25.0, host Node v22.21.0, inherited host Codex profile, five tools, the archived short headless policy, TST unconfigured, background enrichment/orchestration/PE3 disabled. The original uncapped task configuration and Docker build overlay were reused.',
+                 'GPT-6 Luna/max, Harbor 0.25.0, host Node v22.21.0, inherited host Codex profile, five tools, the archived short headless policy, TST unconfigured, background enrichment/orchestration/PE3 disabled. The original uncapped task configuration was reused.',
                  'Read-only instrumentation captured actual thread/start and turn/start requests and the broken starting workspace before the first model request. All 14 initial files matched; primary messages and selection matched the historical capture exactly. The five actual tool schemas and current native developer instructions were captured.',
                  'The passing historical run did not capture its native developer instructions, source revision or profile hashes. Those cannot be proven identical retrospectively; this run records the current source revision and profile hashes. Paths, session IDs and timestamps are necessarily fresh.', '',
                  f"Cuppet source: `{PIN}`. Original adapter hashes: `{EXPECTED}`.",
@@ -179,7 +185,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
         if reset:
             lines += ['', f"Docker profile benchmark was deleted with its data and recreated. Engine ID changed from `{reset['docker_before']['ID']}` to `{reset['docker_after']['ID']}`. VM resources were preserved: {reset['resources_preserved']}.",
                       'The Docker instance was already empty before reset; it was empty again after recreation. Other VM profiles and host-side benchmark evidence were preserved. Full reset evidence is embedded in the structured result.',
-                      'Docker Compose 5.6 required explicit network.host build entitlement for the archived host-network build overlay. This was added as a build-only Compose overlay; task source, Dockerfile and runtime network configuration were unchanged.',
+                      'Docker Compose 5.6/buildx 0.38 rejected the archived host-network build workaround. A build-only overlay switched image construction to the standard Docker network; task files, Dockerfile and runtime networking were unchanged. Setup-only failures were retained before any model execution.',
                       f"Host profile matched the preceding retry: {state.get('host_profile_matches_previous_retry')}; changed files: {state.get('changed_host_profile_files')}. The model and effort were explicitly requested and the original Codex 0.162.1 executable was pinned for this job."]
         (ROOT / f'{result_prefix}-RESULTS.md').write_text('\n'.join(lines)+'\n')
         print(json.dumps({key: state[key] for key in ['name','state','reward','official_tests','agent_seconds','historical_primary_messages_match']}), flush=True)
