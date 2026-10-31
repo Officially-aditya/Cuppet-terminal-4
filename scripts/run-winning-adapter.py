@@ -67,6 +67,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
     config['jobs_dir'] = str(ROOT / 'jobs')
     config['agents'][0]['name'] = 'winning_adapter.harbor_cuppet_agent:CuppetAgent'
     config['agents'][0]['kwargs'].update(state_dir=str(state_dir), node_bin=str(wrapper))
+    if reset:
+        config.setdefault('environment', {}).setdefault('extra_docker_compose', []).append(str(ROOT / 'configs/mvcc-build-entitlements.yaml'))
     config_path = folder / 'config.json'
     save(config_path, config)
     home = Path(os.environ.get('CODEX_HOME', '/Users/addy/.codex'))
@@ -86,6 +88,8 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
                  original_task_config=str(config['tasks'][0]['path']))
     state['experiment_label'] = label
     state['docker_reset'] = reset
+    if reset:
+        state['build_network_entitlement'] = 'network.host (build phase only, matching the existing host-network build overlay)'
     previous_path = ROOT / 'MVCC-WINNING-ADAPTER-RESULTS.json'
     if reset and previous_path.is_file():
         previous_profiles = json.loads(previous_path.read_text())['current_host_profile_hashes']
@@ -175,6 +179,7 @@ def run(label='mvcc-winning-adapter', reset_evidence=None):
         if reset:
             lines += ['', f"Docker profile benchmark was deleted with its data and recreated. Engine ID changed from `{reset['docker_before']['ID']}` to `{reset['docker_after']['ID']}`. VM resources were preserved: {reset['resources_preserved']}.",
                       'The Docker instance was already empty before reset; it was empty again after recreation. Other VM profiles and host-side benchmark evidence were preserved. Full reset evidence is embedded in the structured result.',
+                      'Docker Compose 5.6 required explicit network.host build entitlement for the archived host-network build overlay. This was added as a build-only Compose overlay; task source, Dockerfile and runtime network configuration were unchanged.',
                       f"Host profile matched the preceding retry: {state.get('host_profile_matches_previous_retry')}; changed files: {state.get('changed_host_profile_files')}. The model and effort were explicitly requested and the original Codex 0.162.1 executable was pinned for this job."]
         (ROOT / f'{result_prefix}-RESULTS.md').write_text('\n'.join(lines)+'\n')
         print(json.dumps({key: state[key] for key in ['name','state','reward','official_tests','agent_seconds','historical_primary_messages_match']}), flush=True)
